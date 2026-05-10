@@ -260,7 +260,7 @@ export default function AuthPage() {
               Reset Password
             </h2>
 
-            <p className="auth-subtitle normal-case text-sm mb-4 text-center">
+            <p className="font-mono text-xs text-muted tracking-widest mt-2 text-center mb-4">
               Enter your email and we'll send you a reset link if it exists.
             </p>
 
