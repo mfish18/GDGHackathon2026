@@ -358,7 +358,7 @@
 }
 
 .vibe-legend {
-  @apply flex flex-col gap-3 flex-1;
+  @apply flex flex-col gap-3;
 }
 
 .vibe-legend-row {
