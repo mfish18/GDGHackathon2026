@@ -468,8 +468,16 @@
   @apply font-mono text-xs text-muted mt-0.5;
 }
 
+.trip-card__actions {
+  @apply flex items-center gap-2 shrink-0 mt-1;
+}
+
+.trip-card__delete {
+  @apply text-white/20 hover:text-red-400 transition-colors duration-200 p-1 rounded;
+}
+
 .trip-card__arrow {
-  @apply text-white/30 mt-1 shrink-0 transition-transform duration-200;
+  @apply text-white/30 transition-transform duration-200;
 }
 
 .trip-card:hover .trip-card__arrow {

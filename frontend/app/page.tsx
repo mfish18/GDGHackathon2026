@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/authContext";
 import { db } from "@/lib/firebase";
+import { authedFetch } from "@/lib/authedFetch";
 import type { Trip } from "@/lib/store";
 
 function AccountButton({ user, onSignOut }: { user: User; onSignOut: () => Promise<void> }) {
@@ -46,7 +47,7 @@ function AccountButton({ user, onSignOut }: { user: User; onSignOut: () => Promi
   );
 }
 
-function TripCard({ trip, onClick, index }: { trip: Trip; onClick: () => void; index: number }) {
+function TripCard({ trip, onClick, onDelete, index }: { trip: Trip; onClick: () => void; onDelete: () => void; index: number }) {
   const date = new Date(trip.createdAt).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
@@ -69,9 +70,22 @@ function TripCard({ trip, onClick, index }: { trip: Trip; onClick: () => void; i
           <p className="trip-card__name">{trip.name}</p>
           <p className="trip-card__date">{date}</p>
         </div>
-        <svg className="trip-card__arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M5 12h14M12 5l7 7-7 7" />
-        </svg>
+        <div className="trip-card__actions">
+          <button
+            className="trip-card__delete"
+            onClick={(e) => { e.stopPropagation(); onDelete(); }}
+            aria-label="Delete trip"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="3 6 5 6 21 6" />
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+              <path d="M10 11v6M14 11v6M9 6V4h6v2" />
+            </svg>
+          </button>
+          <svg className="trip-card__arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </div>
       </div>
 
       <p className="trip-card__title">{trip.title}</p>
@@ -140,6 +154,11 @@ export default function DashboardPage() {
     }).catch(console.error);
   }, [user]);
 
+  async function handleDelete(tripId: string) {
+    await authedFetch(`${process.env.NEXT_PUBLIC_API_URL}/delete-trip/${tripId}`, { method: "DELETE" });
+    setTrips(prev => prev.filter(t => t.id !== tripId));
+  }
+
   if (authLoading || !user) return null;
 
   return (
@@ -176,6 +195,7 @@ export default function DashboardPage() {
               trip={trip}
               index={i}
               onClick={() => router.push(`/results?tripId=${trip.id}`)}
+              onDelete={() => handleDelete(trip.id)}
             />
           ))}
 
