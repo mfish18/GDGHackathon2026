@@ -28,7 +28,11 @@ gemini_client = genai.Client(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://gdg-hackathon2026-git-main-mfish18s-projects.vercel.app/", "http://localhost:3000", "https://gdg-hackathon2026.vercel.app/", "https://squash-saxophone-slinging.ngrok-free.dev"],
+    allow_origins=[
+        "https://gdg-hackathon2026-git-main-mfish18s-projects.vercel.app",
+        "https://gdg-hackathon2026.vercel.app",
+        "http://localhost:3000",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
