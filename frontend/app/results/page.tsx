@@ -10,6 +10,7 @@ import { useAuth } from "@/lib/authContext";
 import type { UserProfile } from "@/lib/store";
 import { authedFetch } from "@/lib/authedFetch";
 import { BONUS_QUERIES } from "@/lib/unsplashQueries";
+import { RadarChart } from "@/components/RadarChart";
 import Link from "next/link";
 
 const fadeUp: Variants = {
@@ -219,31 +220,25 @@ export default function ResultsPage() {
 
       <section className="results-section">
         <Animate i={7}><p className="results-label">Vibe Breakdown</p></Animate>
-        <div className="vibe-list">
-          {(Object.keys(VIBE_LABELS) as (keyof UserProfile)[]).map((key, i) => {
+        <div className="radar-wrap">
+          <RadarChart
+            scores={(Object.keys(VIBE_LABELS) as (keyof UserProfile)[]).map((key) => ({
+              label: VIBE_LABELS[key].label,
+              value: normalizeTo100(tripData.user_score?.[key] ?? 0),
+            }))}
+          />
+        </div>
+        <div className="vibe-legend">
+          {(Object.keys(VIBE_LABELS) as (keyof UserProfile)[]).map((key) => {
             const { label, low, high } = VIBE_LABELS[key];
             const score = tripData.user_score?.[key] ?? 0;
-            const pct = normalizeTo100(score);
             return (
-              <Animate key={key} i={8 + i}>
-                <div className="vibe-row">
-                  <div className="vibe-row__header">
-                    <span className="vibe-row__label">{label}</span>
-                    <span className="vibe-row__ends">
-                      <span className={`vibe-row__low${score < 0 ? " vibe-row__end--active" : ""}`}>{low}</span>
-                      <span className={`vibe-row__high${score > 0 ? " vibe-row__end--active" : ""}`}>{high}</span>
-                    </span>
-                  </div>
-                  <div className="vibe-track">
-                    <motion.div
-                      className="vibe-fill"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${pct}%` }}
-                      transition={{ delay: (8 + i) * 0.12 + 0.3, duration: 0.7, ease: "easeOut" }}
-                    />
-                  </div>
-                </div>
-              </Animate>
+              <div key={key} className="vibe-legend-row">
+                <span className="vibe-legend__label">{label}</span>
+                <span className={`vibe-legend__end${score <= 0 ? " vibe-legend__end--active" : ""}`}>{low}</span>
+                <span className="vibe-legend__sep">→</span>
+                <span className={`vibe-legend__end${score > 0 ? " vibe-legend__end--active" : ""}`}>{high}</span>
+              </div>
             );
           })}
         </div>
