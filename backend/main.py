@@ -293,8 +293,22 @@ def travel_profile(trip_id: str, user=Depends(get_current_user)):
 
     return {"trip_id": trip_id, "data": ai_response}
 
-
+@app.delete("/delete-trip/{trip_id}")
+def delete_trip(trip_id: str, user=Depends(get_current_user)):
+    uid = user["uid"]
     
+    # Reference to the specific trip document
+    trip_ref = db.collection("users").document(uid).collection("trips").document(trip_id)
+
+    # Check if the document exists before attempting to delete
+    if not trip_ref.get().exists:
+        return {"error": "Trip not found"}, 404
+
+    # Delete the document
+    trip_ref.delete()
+    
+    return {"message": f"Trip {trip_id} successfully deleted", "trip_id": trip_id}
+
 @app.get("/verify-token")
 def verify_route(user=Depends(get_current_user)):
     return {
