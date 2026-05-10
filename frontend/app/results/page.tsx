@@ -132,19 +132,21 @@ export default function ResultsPage() {
       } catch {}
     }
     try {
-      const results = await Promise.all(
-        BONUS_QUERIES.map(async (query, idx) => {
-          const res = await fetch(
-            `https://api.unsplash.com/photos/random?query=${encodeURIComponent(query)}&client_id=${process.env.NEXT_PUBLIC_UNSPLASH_KEY}`
-          );
-          const data = await res.json();
-          return {
-            id: data.id ?? `bonus-${idx}`,
-            label: query,
-            imageUrl: data.urls.regular,
-          };
-        })
-      );
+      const results = (
+        await Promise.all(
+          BONUS_QUERIES.map(async (query, idx) => {
+            const res = await fetch(
+              `https://api.unsplash.com/photos/random?query=${encodeURIComponent(query)}&client_id=${process.env.NEXT_PUBLIC_UNSPLASH_KEY}`
+            );
+            const data = await res.json();
+            return {
+              id: data.id ?? `bonus-${idx}`,
+              label: query,
+              imageUrl: data.urls?.regular ?? "",
+            };
+          })
+        )
+      ).filter((r) => r.imageUrl);
       localStorage.setItem(BONUS_CACHE_KEY, JSON.stringify(results));
       setBonusCards(results);
       setBonusIndex(0);
@@ -184,7 +186,11 @@ export default function ResultsPage() {
     if (user && tripId) {
       try {
         const snap = await getDoc(doc(db, "users", user.uid, "trips", tripId));
-        if (snap.exists()) setTripData(snap.data() as TripData);
+        if (snap.exists()) {
+          localStorage.removeItem(`${DEST_PHOTO_CACHE_PREFIX}${tripId}`);
+          setDestPhotos({});
+          setTripData(snap.data() as TripData);
+        }
       } catch {}
     }
 
