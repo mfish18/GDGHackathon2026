@@ -32,6 +32,7 @@ const VIBE_LABELS: Record<keyof UserProfile, { low: string; high: string; label:
 
 const MAX_SCORE = 120;
 const BONUS_CACHE_KEY = "unsplash_bonus_cache";
+const DEST_PHOTO_CACHE_PREFIX = "unsplash_dest_cache_";
 
 function normalizeTo100(value: number) {
   return Math.round(((value + MAX_SCORE) / (MAX_SCORE * 2)) * 100);
@@ -66,6 +67,8 @@ export default function ResultsPage() {
   const [tripData, setTripData] = useState<TripData | null>(null);
   const [tripId, setTripId] = useState<string | null>(null);
 
+  const [destPhotos, setDestPhotos] = useState<Record<string, string>>({});
+
   const [bonusMode, setBonusMode] = useState<BonusMode>("idle");
   const [bonusCards, setBonusCards] = useState<BonusCard[]>([]);
   const [bonusIndex, setBonusIndex] = useState(0);
@@ -89,6 +92,32 @@ export default function ResultsPage() {
       })
       .catch(() => router.replace("/"));
   }, [user, authLoading, router]);
+
+  useEffect(() => {
+    if (!tripData || !tripId) return;
+    const cacheKey = `${DEST_PHOTO_CACHE_PREFIX}${tripId}`;
+    (async () => {
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        try { setDestPhotos(JSON.parse(cached)); return; } catch {}
+      }
+      try {
+        const names = [tripData.trip1_location, tripData.trip2_location, tripData.trip3_location];
+        const entries = await Promise.all(
+          names.map(async (name) => {
+            const res = await fetch(
+              `https://api.unsplash.com/photos/random?query=${encodeURIComponent(name)}&client_id=${process.env.NEXT_PUBLIC_UNSPLASH_KEY}`
+            );
+            const data = await res.json();
+            return [name, data.urls?.small ?? ""] as [string, string];
+          })
+        );
+        const photos = Object.fromEntries(entries.filter(([, url]) => url));
+        localStorage.setItem(cacheKey, JSON.stringify(photos));
+        setDestPhotos(photos);
+      } catch {}
+    })();
+  }, [tripData, tripId]);
 
   async function startBonusRating() {
     setBonusMode("loading");
@@ -208,10 +237,20 @@ export default function ResultsPage() {
           {destinations.map((dest, i) => (
             <Animate key={dest.name} i={4 + i}>
               <div className="destination-card">
-                <div className="destination-card__header">
-                  <span className="destination-card__city">{dest.name}</span>
+                <div className="destination-card__body">
+                  <div className="destination-card__header">
+                    <span className="destination-card__city">{dest.name}</span>
+                  </div>
+                  <p className="destination-card__reason">{dest.reason}</p>
                 </div>
-                <p className="destination-card__reason">{dest.reason}</p>
+                {destPhotos[dest.name] && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={destPhotos[dest.name]}
+                    alt={dest.name}
+                    className="destination-card__photo"
+                  />
+                )}
               </div>
             </Animate>
           ))}

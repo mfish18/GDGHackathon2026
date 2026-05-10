@@ -290,7 +290,20 @@
 
 .destination-card {
   @apply border border-white/10 rounded-xl p-5 bg-white/[0.02]
-         hover:bg-white/[0.05] transition-colors;
+         hover:bg-white/[0.05] transition-colors overflow-hidden
+         flex items-center gap-4;
+}
+
+.destination-card__body {
+  @apply flex-1 min-w-0;
+}
+
+.destination-card__photo {
+  flex-shrink: 0;
+  width: 16rem;
+  height: 14rem;
+  object-fit: cover;
+  border-radius: 0.5rem;
 }
 
 .destination-card__header {
