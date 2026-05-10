@@ -54,10 +54,6 @@ export default function Home() {
   const { user, loading: authLoading, signOut } = useAuth();
   const [cards, setCards] = useState<TravelCard[]>([]);
 
-  // useEffect(() => {
-  //   user?.getIdToken().then(t => console.log("TOKEN:", t));
-  // }, [user]);
-
   useEffect(() => {
     if (!authLoading && !user) router.replace("/auth");
   }, [user, authLoading, router]);
