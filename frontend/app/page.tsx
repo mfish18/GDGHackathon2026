@@ -9,6 +9,7 @@ import { useAuth } from "@/lib/authContext";
 import { db } from "@/lib/firebase";
 import { authedFetch } from "@/lib/authedFetch";
 import type { Trip } from "@/lib/store";
+import Link from "next/link";
 
 function AccountButton({ user, onSignOut }: { user: User; onSignOut: () => Promise<void> }) {
   const [open, setOpen] = useState(false);
@@ -191,7 +192,9 @@ export default function DashboardPage() {
       )}
       <header className="dashboard-header">
         <div>
-          <h1 className="dashboard-header__title">Travel DNA</h1>
+          <Link href="/" className="dashboard-header__link">
+            <h1 className="dashboard-header__title">Travel DNA</h1>
+          </Link>
           <p className="dashboard-header__subtitle">
             {user.displayName ? `Welcome back, ${user.displayName.split(" ")[0]}` : "Your trips"}
           </p>

@@ -10,6 +10,7 @@ import { useAuth } from "@/lib/authContext";
 import type { UserProfile } from "@/lib/store";
 import { authedFetch } from "@/lib/authedFetch";
 import { BONUS_QUERIES } from "@/lib/unsplashQueries";
+import Link from "next/link";
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 24 },
@@ -171,16 +172,18 @@ export default function ResultsPage() {
   return (
     <main className="page">
 
-      <header className="results-header">
+      <header className="dashboard-header">
         <div>
-          <p className="results-header__title">Travel DNA</p>
+          <Link href="/" className="dashboard-header__link">
+            <p className="dashboard-header__title">Travel DNA</p>
+          </Link>
           {user?.displayName && (
-            <p className="results-header__user">{user.displayName}</p>
+            <p className="dashboard-header__user">{user.displayName}</p>
           )}
         </div>
         {user && (
           <button
-            className="results-header__signout"
+            className="dashboard-header__signout"
             onClick={async () => {
               await signOut();
               router.push("/auth");

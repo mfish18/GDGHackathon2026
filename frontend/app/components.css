@@ -219,6 +219,7 @@
 
 .results-header__title {
   @apply font-display text-lg font-bold text-paper tracking-tight;
+  color: inherit;
 }
 
 .results-header__user {
@@ -508,6 +509,19 @@
 
 .dashboard-header__subtitle {
   @apply font-mono text-xs text-muted mt-0.5;
+}
+
+.dashboard-header__link {
+  color: var(--color-accent);
+  text-decoration: underline;
+}
+
+.dashboard-header__link:hover {
+  color: var(--color-accent-hover);
+}
+
+.dashboard-header__title {
+  color: inherit;
 }
 
 .dashboard-content {
