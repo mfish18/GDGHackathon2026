@@ -87,18 +87,18 @@ export default function ResultsPage() {
   return (
     <main className="page">
 
-      <header className="results-header">
+      <header className="dashboard-header">
         <div>
           <Link href="/" className="dashboard-header__link">
-            <p className="results-header__title">Travel DNA</p>
+            <p className="dashboard-header__title">Travel DNA</p>
           </Link>
           {user?.displayName && (
-            <p className="results-header__user">{user.displayName}</p>
+            <p className="dashboard-header__user">{user.displayName}</p>
           )}
         </div>
         {user && (
           <button
-            className="results-header__signout"
+            className="dashboard-header__signout"
             onClick={async () => {
               await signOut();
               router.push("/auth");
