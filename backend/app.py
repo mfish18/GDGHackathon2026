@@ -7,8 +7,18 @@ import time
 import requests
 from io import BytesIO
 from fastapi.middleware.cors import CORSMiddleware
+from google import genai
+from dotenv import load_dotenv
+import os
+import json
 
 app = FastAPI()
+
+load_dotenv()
+
+gemini_client = genai.Client(
+    api_key=os.getenv("LLM_GEMINI_KEY")
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -19,11 +29,11 @@ app.add_middleware(
 )
 
 user_profile = {
-    "energy": 0.0,
-    "nature": 0.0,
-    "nightlife": 0.0,
-    "luxury": 0.0,
-    "social_density": 0.0
+    "energy": 5,
+    "nature": 6,
+    "nightlife": 10,
+    "luxury": 8,
+    "social_density": 5
 }
 
 device = "mps" if torch.backends.mps.is_available() else "cpu"
@@ -117,6 +127,130 @@ vibe_definitions = {
     }
 }
 
+def generate_travel_profile(scores):
+
+    prompt = f"""
+You are an AI travel personality engine.
+
+Analyze the user's personality scores and infer:
+- their travel behavior
+- preferred environments
+- social tendencies
+- pacing
+- ideal trip atmosphere
+
+User scores:
+{json.dumps(scores, indent=2)}
+
+Generate:
+1. A personality-style travel archetype title
+   Examples:
+   - "The Adventurer"
+   - "The Urban Explorer"
+   - "The Cultural Nomad"
+   - "The Luxury Wanderer"
+
+2. A travel lifestyle description:
+   - 1 to 2 detailed paragraphs
+   - explain WHY this person travels this way
+   - describe the kinds of environments, experiences, energy levels, and activities they are naturally drawn toward
+   - make it feel personalized and insightful like a personality test result
+
+3. A short caption:
+   - one memorable sentence
+   - should feel modern, inspiring, and social-media friendly
+
+4. Three destination recommendations:
+   - each destination should strongly match the personality profile
+   - include a 2 to 3 sentence explanation for WHY the destination fits this traveler
+   - explanations should reference atmosphere, activities, social vibe, nature, luxury, nightlife, exploration style, etc.
+
+IMPORTANT RULES:
+- Return ONLY valid JSON
+- No markdown
+- No code blocks
+- No explanations outside JSON
+- Make the writing immersive and human
+- Destinations must be real places
+- Avoid repetitive destination choices
+
+Return this EXACT JSON structure:
+
+{{
+  "title": "",
+  "travel_lifestyle": "",
+  "caption": "",
+  "destinations": [
+    {{
+      "name": "",
+      "reason": ""
+    }},
+    {{
+      "name": "",
+      "reason": ""
+    }},
+    {{
+      "name": "",
+      "reason": ""
+    }}
+  ]
+}}
+"""
+    # prompt = f"""
+    # You are a travel personality engine.
+
+    # Based on these scores:
+    # {json.dumps(scores, indent=2)}
+
+    # Generate:
+    # 1. A travel lifestyle description
+    # 2. A short travel personality caption
+    # 3. 3 travel destinations
+
+    # IMPORTANT:
+    # - Return ONLY valid JSON
+    # - No markdown
+    # - No explanations outside JSON
+
+    # Format:
+    # {{
+    #   "travel_lifestyle": "",
+    #   "caption": "",
+    #   "destinations": [
+    #     {{
+    #       "name": "",
+    #       "reason": ""
+    #     }},
+    #     {{
+    #       "name": "",
+    #       "reason": ""
+    #     }},
+    #     {{
+    #       "name": "",
+    #       "reason": ""
+    #     }}
+    #   ]
+    # }}
+    # """
+
+    response = gemini_client.models.generate_content(
+        model="gemini-3.1-flash-lite",
+        contents=prompt,
+        config={
+            "max_output_tokens": 1200,
+            "temperature": 0.7,
+            "response_mime_type": "application/json",
+        }
+    )
+
+    raw = response.text
+
+    start = raw.find("{")
+    end = raw.rfind("}") + 1
+
+    cleaned = raw[start:end]
+
+    return json.loads(cleaned)
 
 @app.post("/score-image")
 def score_image(req: ImageRequest):
@@ -138,3 +272,10 @@ def score_image(req: ImageRequest):
         "user_profile": user_profile,
         "inference_time_sec": round(end - start, 4)
     }
+
+@app.get("/travel-profile")
+def travel_profile():
+
+    result = generate_travel_profile(user_profile)
+
+    return result
