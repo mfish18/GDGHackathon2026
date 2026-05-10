@@ -15,7 +15,7 @@ import hashlib
 import firebase_admin
 from firebase_admin import credentials, auth, firestore
 from auth import verify_firebase_token, get_current_user
-from firebase import firebase_init
+from backend.firebase_config import firebase_init
 
 firebase_init()
 app = FastAPI()
