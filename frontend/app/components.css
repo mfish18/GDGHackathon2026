@@ -346,51 +346,39 @@
 }
 
 /* ============================================================
-   VIBE BREAKDOWN
+   VIBE BREAKDOWN — RADAR CHART
    ============================================================ */
 
-.vibe-list {
-  @apply space-y-5;
+.vibe-section-row {
+  @apply flex flex-row items-center justify-center gap-12 mt-2;
 }
 
-.vibe-row {
-  @apply flex flex-col gap-1.5;
+.radar-wrap {
+  @apply shrink-0;
 }
 
-.vibe-row__header {
-  @apply flex items-center justify-between;
+.vibe-legend {
+  @apply flex flex-col gap-3;
 }
 
-.vibe-row__label {
-  @apply font-mono text-xs text-paper/60 uppercase tracking-widest;
+.vibe-legend-row {
+  @apply flex items-center gap-2 font-mono text-xs;
 }
 
-.vibe-row__ends {
-  @apply flex gap-3;
+.vibe-legend__label {
+  @apply text-paper/50 uppercase tracking-widest w-24 shrink-0;
 }
 
-.vibe-row__low {
-  @apply font-mono text-xs text-muted;
+.vibe-legend__end {
+  @apply text-muted;
 }
 
-.vibe-row__low.vibe-row__end--active {
+.vibe-legend__end--active {
   @apply text-accent;
 }
 
-.vibe-row__high {
-  @apply font-mono text-xs text-muted;
-}
-
-.vibe-row__high.vibe-row__end--active {
-  @apply text-accent;
-}
-
-.vibe-track {
-  @apply h-1 bg-white/10 rounded-full overflow-hidden;
-}
-
-.vibe-fill {
-  @apply h-full bg-accent rounded-full;
+.vibe-legend__sep {
+  @apply text-white/15;
 }
 
 

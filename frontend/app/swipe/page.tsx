@@ -180,6 +180,16 @@ export default function SwipePage() {
     },
     [cards, liked, skipped, router, tripId]
   );
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (cards.length === 0 || !tripReady) return;
+      if (e.key === "ArrowRight") handleSwipe("like");
+      else if (e.key === "ArrowLeft") handleSwipe("skip");
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [handleSwipe, cards.length, tripReady]);
+
   if (loading) {
     return (
       <main className="swipe-page">
