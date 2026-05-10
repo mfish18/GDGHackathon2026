@@ -11,7 +11,6 @@ export type TravelCard = {
   label: string;
   location: string;
   imageUrl: string;
-  vibes: VibeScores;
 };
 
 export const CARDS: TravelCard[] = [
@@ -20,85 +19,84 @@ export const CARDS: TravelCard[] = [
     label: "Neon-lit alleyways",
     location: "Tokyo, Japan",
     imageUrl: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800&q=80",
-    vibes: { energy: 9, nature: 1, nightlife: 8, culture: 7, solitude: 2 },
   },
-  {
-    id: "norwegian-fjord",
-    label: "Glacial silence",
-    location: "Geiranger, Norway",
-    imageUrl: "https://images.unsplash.com/photo-1520769669658-f07657f5a307?w=800&q=80",
-    vibes: { energy: 1, nature: 10, nightlife: 0, culture: 3, solitude: 9 },
-  },
-  {
-    id: "marrakech-souk",
-    label: "Spice market chaos",
-    location: "Marrakech, Morocco",
-    imageUrl: "https://images.unsplash.com/photo-1489493585363-d69421e0edd3?w=800&q=80",
-    vibes: { energy: 8, nature: 2, nightlife: 4, culture: 10, solitude: 1 },
-  },
-  {
-    id: "amalfi-terrace",
-    label: "Clifftop cafes",
-    location: "Amalfi Coast, Italy",
-    imageUrl: "https://images.unsplash.com/photo-1533587851505-d119e13fa0d7?w=800&q=80",
-    vibes: { energy: 4, nature: 6, nightlife: 3, culture: 8, solitude: 5 },
-  },
-  {
-    id: "kyoto-temple",
-    label: "Ancient moss gardens",
-    location: "Kyoto, Japan",
-    imageUrl: "https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=800&q=80",
-    vibes: { energy: 2, nature: 7, nightlife: 1, culture: 10, solitude: 7 },
-  },
-  {
-    id: "nyc-rooftop",
-    label: "Skyline at midnight",
-    location: "New York, USA",
-    imageUrl: "https://images.unsplash.com/photo-1546436836-07a91091f160?w=800&q=80",
-    vibes: { energy: 10, nature: 0, nightlife: 9, culture: 6, solitude: 1 },
-  },
-  {
-    id: "patagonia-trek",
-    label: "Wind-scoured peaks",
-    location: "Patagonia, Argentina",
-    imageUrl: "https://images.unsplash.com/photo-1501854140801-50d01698950b?w=800&q=80",
-    vibes: { energy: 5, nature: 10, nightlife: 0, culture: 2, solitude: 10 },
-  },
-  {
-    id: "lisbon-tram",
-    label: "Pastel tram rides",
-    location: "Lisbon, Portugal",
-    imageUrl: "https://images.unsplash.com/photo-1555881400-74d7acaacd8b?w=800&q=80",
-    vibes: { energy: 5, nature: 3, nightlife: 6, culture: 8, solitude: 4 },
-  },
-  {
-    id: "bali-rice",
-    label: "Emerald terraces",
-    location: "Ubud, Bali",
-    imageUrl: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800&q=80",
-    vibes: { energy: 3, nature: 9, nightlife: 2, culture: 6, solitude: 6 },
-  },
-  {
-    id: "berlin-club",
-    label: "Industrial dance floors",
-    location: "Berlin, Germany",
-    imageUrl: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80",
-    vibes: { energy: 8, nature: 1, nightlife: 10, culture: 5, solitude: 2 },
-  },
-  {
-    id: "sahara-dunes",
-    label: "Endless dunes",
-    location: "Sahara, Morocco",
-    imageUrl: "https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=800&q=80",
-    vibes: { energy: 2, nature: 8, nightlife: 0, culture: 4, solitude: 9 },
-  },
-  {
-    id: "bangkok-street",
-    label: "Street food chaos",
-    location: "Bangkok, Thailand",
-    imageUrl: "https://images.unsplash.com/photo-1563492065599-3520f775eeed?w=800&q=80",
-    vibes: { energy: 9, nature: 1, nightlife: 7, culture: 8, solitude: 1 },
-  },
+  // {
+  //   id: "norwegian-fjord",
+  //   label: "Glacial silence",
+  //   location: "Geiranger, Norway",
+  //   imageUrl: "https://images.unsplash.com/photo-1520769669658-f07657f5a307?w=800&q=80",
+  //   vibes: { energy: 1, nature: 10, nightlife: 0, culture: 3, solitude: 9 },
+  // },
+  // {
+  //   id: "marrakech-souk",
+  //   label: "Spice market chaos",
+  //   location: "Marrakech, Morocco",
+  //   imageUrl: "https://images.unsplash.com/photo-1489493585363-d69421e0edd3?w=800&q=80",
+  //   vibes: { energy: 8, nature: 2, nightlife: 4, culture: 10, solitude: 1 },
+  // },
+  // {
+  //   id: "amalfi-terrace",
+  //   label: "Clifftop cafes",
+  //   location: "Amalfi Coast, Italy",
+  //   imageUrl: "https://images.unsplash.com/photo-1533587851505-d119e13fa0d7?w=800&q=80",
+  //   vibes: { energy: 4, nature: 6, nightlife: 3, culture: 8, solitude: 5 },
+  // },
+  // {
+  //   id: "kyoto-temple",
+  //   label: "Ancient moss gardens",
+  //   location: "Kyoto, Japan",
+  //   imageUrl: "https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=800&q=80",
+  //   vibes: { energy: 2, nature: 7, nightlife: 1, culture: 10, solitude: 7 },
+  // },
+  // {
+  //   id: "nyc-rooftop",
+  //   label: "Skyline at midnight",
+  //   location: "New York, USA",
+  //   imageUrl: "https://images.unsplash.com/photo-1546436836-07a91091f160?w=800&q=80",
+  //   vibes: { energy: 10, nature: 0, nightlife: 9, culture: 6, solitude: 1 },
+  // },
+  // {
+  //   id: "patagonia-trek",
+  //   label: "Wind-scoured peaks",
+  //   location: "Patagonia, Argentina",
+  //   imageUrl: "https://images.unsplash.com/photo-1501854140801-50d01698950b?w=800&q=80",
+  //   vibes: { energy: 5, nature: 10, nightlife: 0, culture: 2, solitude: 10 },
+  // },
+  // {
+  //   id: "lisbon-tram",
+  //   label: "Pastel tram rides",
+  //   location: "Lisbon, Portugal",
+  //   imageUrl: "https://images.unsplash.com/photo-1555881400-74d7acaacd8b?w=800&q=80",
+  //   vibes: { energy: 5, nature: 3, nightlife: 6, culture: 8, solitude: 4 },
+  // },
+  // {
+  //   id: "bali-rice",
+  //   label: "Emerald terraces",
+  //   location: "Ubud, Bali",
+  //   imageUrl: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800&q=80",
+  //   vibes: { energy: 3, nature: 9, nightlife: 2, culture: 6, solitude: 6 },
+  // },
+  // {
+  //   id: "berlin-club",
+  //   label: "Industrial dance floors",
+  //   location: "Berlin, Germany",
+  //   imageUrl: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80",
+  //   vibes: { energy: 8, nature: 1, nightlife: 10, culture: 5, solitude: 2 },
+  // },
+  // {
+  //   id: "sahara-dunes",
+  //   label: "Endless dunes",
+  //   location: "Sahara, Morocco",
+  //   imageUrl: "https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=800&q=80",
+  //   vibes: { energy: 2, nature: 8, nightlife: 0, culture: 4, solitude: 9 },
+  // },
+  // {
+  //   id: "bangkok-street",
+  //   label: "Street food chaos",
+  //   location: "Bangkok, Thailand",
+  //   imageUrl: "https://images.unsplash.com/photo-1563492065599-3520f775eeed?w=800&q=80",
+  //   vibes: { energy: 9, nature: 1, nightlife: 7, culture: 8, solitude: 1 },
+  // },
 ];
 
 export type Archetype = {
