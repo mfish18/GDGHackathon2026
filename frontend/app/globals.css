@@ -1,0 +1,24 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=DM+Mono:wght@400;500&display=swap');
+
+@import "tailwindcss";
+@import "./components.css";
+
+@theme {
+  --color-ink: #0a0a0a;
+  --color-paper: #f5f2ec;
+  --color-cream: #ede9e0;
+  --color-accent: #c8401a;
+  --color-accent-hover: #e04d20;
+  --color-muted: #7a7570;
+
+  --font-display: "Playfair Display", serif;
+  --font-sans: "DM Sans", sans-serif;
+  --font-mono: "DM Mono", monospace;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-ink);
+  color: var(--color-paper);
+  overflow-x: hidden;
+}

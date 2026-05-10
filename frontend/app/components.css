@@ -1,0 +1,297 @@
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+
+.page {
+  @apply min-h-screen bg-ink text-paper;
+}
+
+.page--centered {
+  @apply min-h-screen bg-ink flex flex-col items-center justify-center px-6;
+}
+
+
+/* ============================================================
+   SWIPE SCREEN
+   ============================================================ */
+
+.swipe-page {
+  @apply min-h-screen bg-ink flex flex-col;
+}
+
+.swipe-header {
+  @apply flex items-center justify-between px-6 pt-8 pb-4 shrink-0;
+}
+
+.swipe-header__title {
+  @apply font-display text-2xl font-bold text-paper tracking-tight;
+}
+
+.swipe-header__subtitle {
+  @apply font-mono text-xs text-muted mt-0.5 uppercase tracking-widest;
+}
+
+.swipe-header__counter {
+  @apply font-mono text-xs text-muted;
+}
+
+.swipe-progress {
+  @apply px-6 mb-4 shrink-0;
+}
+
+.swipe-progress__track {
+  @apply h-px bg-white/10 w-full rounded-full overflow-hidden;
+}
+
+.swipe-progress__fill {
+  @apply h-full bg-accent;
+}
+
+.swipe-arena {
+  @apply flex-1 flex flex-col items-center justify-center px-6;
+}
+
+.swipe-stack {
+  @apply relative w-full max-w-sm h-[480px];
+}
+
+.swipe-stack__empty {
+  @apply absolute inset-0 flex items-center justify-center;
+}
+
+.swipe-hint {
+  @apply font-mono mt-6 text-xs text-muted tracking-widest uppercase text-center;
+}
+
+.swipe-actions {
+  @apply shrink-0 flex items-center justify-center gap-6 px-6 py-8;
+}
+
+.btn-skip {
+  @apply w-16 h-16 rounded-full border border-white/20 flex items-center justify-center
+         text-white/40 hover:border-rose-400 hover:text-rose-400
+         transition-all duration-200 disabled:opacity-20 disabled:cursor-not-allowed;
+}
+
+.btn-like {
+  @apply w-20 h-20 rounded-full bg-accent flex items-center justify-center text-white
+         hover:bg-accent-hover transition-all duration-200 shadow-lg
+         disabled:opacity-20 disabled:cursor-not-allowed;
+}
+
+
+/* ============================================================
+   SWIPE CARD
+   ============================================================ */
+
+.swipe-card {
+  @apply absolute inset-0 cursor-grab active:cursor-grabbing select-none;
+}
+
+.swipe-card__inner {
+  @apply relative w-full h-full rounded-2xl overflow-hidden shadow-2xl;
+}
+
+.swipe-card__image {
+  @apply object-cover;
+}
+
+.swipe-card__overlay {
+  @apply absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent;
+}
+
+.swipe-card__badge--yes {
+  @apply absolute top-8 left-8 border-4 border-emerald-400 text-emerald-400
+         px-4 py-2 rounded-lg -rotate-12;
+}
+
+.swipe-card__badge--skip {
+  @apply absolute top-8 right-8 border-4 border-rose-400 text-rose-400
+         px-4 py-2 rounded-lg rotate-12;
+}
+
+.swipe-card__badge-label {
+  @apply font-mono text-xl font-bold tracking-widest;
+}
+
+.swipe-card__info {
+  @apply absolute bottom-0 left-0 right-0 p-8;
+}
+
+.swipe-card__location {
+  @apply font-mono text-xs text-white/60 tracking-widest uppercase;
+}
+
+
+/* ============================================================
+   LOADING SCREEN
+   ============================================================ */
+
+.loading-panel {
+  @apply w-full max-w-sm;
+}
+
+.loading-title {
+  @apply font-display text-4xl font-bold text-paper mb-2;
+}
+
+.loading-title__accent {
+  @apply italic text-accent;
+}
+
+.loading-subtitle {
+  @apply font-mono text-muted text-sm mb-12 mt-4;
+}
+
+.loading-steps {
+  @apply space-y-4;
+}
+
+.loading-step {
+  @apply flex items-center gap-3;
+}
+
+.loading-step__dot {
+  @apply w-1.5 h-1.5 rounded-full bg-accent shrink-0;
+}
+
+.loading-step__label {
+  @apply font-mono text-sm text-paper/60;
+}
+
+.loading-bar {
+  @apply mt-12 h-px bg-white/10 overflow-hidden rounded-full;
+}
+
+.loading-bar__fill {
+  @apply h-full bg-accent;
+}
+
+
+/* ============================================================
+   RESULTS SCREEN
+   ============================================================ */
+
+.results-section {
+  @apply px-6 py-10 border-b border-white/10;
+}
+
+.results-section--cta {
+  @apply px-6 py-12 text-center;
+}
+
+.results-label {
+  @apply font-mono text-xs text-muted uppercase tracking-widest mb-5;
+}
+
+.results-eyebrow {
+  @apply font-mono text-xs text-accent uppercase tracking-[0.25em] mb-4;
+}
+
+.results-title {
+  @apply font-display text-5xl font-black leading-none text-paper mb-1;
+}
+
+.results-tagline {
+  @apply font-display text-xl text-accent italic mt-2 mb-6;
+}
+
+.results-summary {
+  @apply text-paper/70 text-base leading-relaxed max-w-prose;
+}
+
+.archetype-card {
+  @apply border border-white/15 rounded-2xl p-6 bg-white/[0.03];
+}
+
+.archetype-card__body {
+  @apply flex items-start justify-between gap-4;
+}
+
+.archetype-card__name {
+  @apply font-display text-2xl font-bold text-paper;
+}
+
+.archetype-card__description {
+  @apply text-muted text-sm mt-2 leading-relaxed;
+}
+
+.archetype-card__badge {
+  @apply shrink-0 w-12 h-12 rounded-full bg-accent/20 border border-accent/40
+         flex items-center justify-center;
+}
+
+.archetype-card__badge-text {
+  @apply font-mono text-accent text-lg font-bold;
+}
+
+.destination-list {
+  @apply space-y-4;
+}
+
+.destination-card {
+  @apply border border-white/10 rounded-xl p-5 bg-white/[0.02]
+         hover:bg-white/[0.05] transition-colors;
+}
+
+.destination-card__header {
+  @apply flex items-baseline gap-2 mb-2;
+}
+
+.destination-card__city {
+  @apply font-display text-lg font-bold text-paper;
+}
+
+.destination-card__country {
+  @apply font-mono text-xs text-muted;
+}
+
+.destination-card__reason {
+  @apply text-paper/60 text-sm leading-relaxed;
+}
+
+.itinerary-list {
+  @apply space-y-6;
+}
+
+.itinerary-day__header {
+  @apply flex items-center gap-3 mb-3;
+}
+
+.itinerary-day__number {
+  @apply font-mono text-xs text-accent tracking-widest;
+}
+
+.itinerary-day__divider {
+  @apply flex-1 h-px bg-white/10;
+}
+
+.itinerary-day__title {
+  @apply font-mono text-xs text-muted;
+}
+
+.itinerary-day__activities {
+  @apply space-y-2 pl-1;
+}
+
+.itinerary-activity {
+  @apply flex items-start gap-3;
+}
+
+.itinerary-activity__dot {
+  @apply text-accent mt-1.5 shrink-0;
+}
+
+.itinerary-activity__text {
+  @apply text-paper/70 text-sm leading-relaxed;
+}
+
+.btn-retake {
+  @apply font-mono px-8 py-3.5 border border-white/20 rounded-full
+         text-paper/60 text-sm hover:border-accent hover:text-accent
+         transition-all duration-200;
+}
+
+.cta-note {
+  @apply text-muted text-sm mb-6;
+}
