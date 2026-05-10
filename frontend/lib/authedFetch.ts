@@ -7,6 +7,7 @@ export async function authedFetch(url: string, options: RequestInit = {}) {
     headers: {
       ...options.headers,
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      "ngrok-skip-browser-warning": "true",
     },
   });
 }
