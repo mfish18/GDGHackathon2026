@@ -178,7 +178,7 @@ export default function ResultsPage() {
             <p className="dashboard-header__title">Travel DNA</p>
           </Link>
           {user?.displayName && (
-            <p className="dashboard-header__user">{user.displayName}</p>
+            <p className="dashboard-header__subtitle">{user.displayName}</p>
           )}
         </div>
         {user && (
@@ -197,7 +197,7 @@ export default function ResultsPage() {
       <section className="results-section">
         <Animate i={0}><p className="results-label">Travel Personality</p></Animate>
         <Animate i={1}>
-          <h1 className="results-title mt-1">{tripData.lifestyle_caption}</h1>
+          <h1 className="results-title mt-1 text-center">{tripData.lifestyle_caption}</h1>
         </Animate>
       </section>
 
