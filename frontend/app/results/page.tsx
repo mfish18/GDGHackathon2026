@@ -237,6 +237,12 @@ export default function ResultsPage() {
           {destinations.map((dest, i) => (
             <Animate key={dest.name} i={4 + i}>
               <div className="destination-card">
+                <div className="destination-card__body">
+                  <div className="destination-card__header">
+                    <span className="destination-card__city">{dest.name}</span>
+                  </div>
+                  <p className="destination-card__reason">{dest.reason}</p>
+                </div>
                 {destPhotos[dest.name] && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -245,10 +251,6 @@ export default function ResultsPage() {
                     className="destination-card__photo"
                   />
                 )}
-                <div className="destination-card__header">
-                  <span className="destination-card__city">{dest.name}</span>
-                </div>
-                <p className="destination-card__reason">{dest.reason}</p>
               </div>
             </Animate>
           ))}
