@@ -7,8 +7,18 @@ import time
 import requests
 from io import BytesIO
 from fastapi.middleware.cors import CORSMiddleware
+from google import genai
+from dotenv import load_dotenv
+import os
+import json
 
 app = FastAPI()
+
+load_dotenv()
+
+gemini_client = genai.Client(
+    api_key=os.getenv("LLM_GEMINI_KEY")
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -19,11 +29,11 @@ app.add_middleware(
 )
 
 user_profile = {
-    "energy": 0.0,
-    "nature": 0.0,
-    "nightlife": 0.0,
-    "luxury": 0.0,
-    "social_density": 0.0
+    "energy": 5,
+    "nature": 6,
+    "nightlife": 10,
+    "luxury": 8,
+    "social_density": 5
 }
 
 device = "mps" if torch.backends.mps.is_available() else "cpu"
@@ -117,6 +127,62 @@ vibe_definitions = {
     }
 }
 
+def generate_travel_profile(scores):
+
+    prompt = f"""
+    You are a travel personality engine.
+
+    Based on these scores:
+    {json.dumps(scores, indent=2)}
+
+    Generate:
+    1. A travel lifestyle description
+    2. A short travel personality caption
+    3. 3 travel destinations
+
+    IMPORTANT:
+    - Return ONLY valid JSON
+    - No markdown
+    - No explanations outside JSON
+
+    Format:
+    {{
+      "travel_lifestyle": "",
+      "caption": "",
+      "destinations": [
+        {{
+          "name": "",
+          "reason": ""
+        }},
+        {{
+          "name": "",
+          "reason": ""
+        }},
+        {{
+          "name": "",
+          "reason": ""
+        }}
+      ]
+    }}
+    """
+
+    response = gemini_client.models.generate_content(
+        model="gemini-3.1-flash-lite",
+        contents=prompt,
+        config={
+            "max_output_tokens": 300,
+            "temperature": 0.9
+        }
+    )
+
+    raw = response.text
+
+    start = raw.find("{")
+    end = raw.rfind("}") + 1
+
+    cleaned = raw[start:end]
+
+    return json.loads(cleaned)
 
 @app.post("/score-image")
 def score_image(req: ImageRequest):
@@ -138,3 +204,10 @@ def score_image(req: ImageRequest):
         "user_profile": user_profile,
         "inference_time_sec": round(end - start, 4)
     }
+
+@app.get("/travel-profile")
+def travel_profile():
+
+    result = generate_travel_profile(user_profile)
+
+    return result
