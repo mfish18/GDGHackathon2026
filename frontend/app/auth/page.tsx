@@ -306,7 +306,7 @@ export default function AuthPage() {
 
               <button
                 type="button"
-                className="flex-1 bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded-md transition"
+                className="auth-submit flex-1 bg-red-500 hover:bg-red-600"
                 onClick={() => setShowResetModal(false)}
               >
                 Cancel
