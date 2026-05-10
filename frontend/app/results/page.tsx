@@ -8,6 +8,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/authContext";
 import type { UserProfile } from "@/lib/store";
+import Link from "next/link";
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 24 },
@@ -88,7 +89,9 @@ export default function ResultsPage() {
 
       <header className="results-header">
         <div>
-          <p className="results-header__title">Travel DNA</p>
+          <Link href="/" className="dashboard-header__link">
+            <p className="results-header__title">Travel DNA</p>
+          </Link>
           {user?.displayName && (
             <p className="results-header__user">{user.displayName}</p>
           )}

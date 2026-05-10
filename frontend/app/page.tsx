@@ -192,7 +192,7 @@ export default function DashboardPage() {
       )}
       <header className="dashboard-header">
         <div>
-          <Link href="/">
+          <Link href="/" className="dashboard-header__link">
             <h1 className="dashboard-header__title">Travel DNA</h1>
           </Link>
           <p className="dashboard-header__subtitle">
