@@ -9,6 +9,7 @@ import { TravelCard } from "@/lib/data";
 import { saveResults, saveUserProfile } from "@/lib/store";
 import { UNSPLASH_QUERIES } from "@/lib/unsplashQueries";
 import { useAuth } from "@/lib/authContext";
+import { authedFetch } from "@/lib/authedFetch";
 
 
 function AccountButton({ user, onSignOut }: { user: User; onSignOut: () => Promise<void> }) {
@@ -52,6 +53,10 @@ export default function Home() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
   const [cards, setCards] = useState<TravelCard[]>([]);
+
+  // useEffect(() => {
+  //   user?.getIdToken().then(t => console.log("TOKEN:", t));
+  // }, [user]);
 
   useEffect(() => {
     if (!authLoading && !user) router.replace("/auth");
