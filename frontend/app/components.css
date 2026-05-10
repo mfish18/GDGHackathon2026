@@ -236,7 +236,7 @@
 }
 
 .results-section--cta {
-  @apply px-6 py-12 text-center;
+  @apply px-6 py-12 flex flex-row flex-wrap justify-center gap-4;
 }
 
 .results-label {
