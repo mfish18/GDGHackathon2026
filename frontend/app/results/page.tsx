@@ -8,6 +8,8 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/authContext";
 import type { UserProfile } from "@/lib/store";
+import { authedFetch } from "@/lib/authedFetch";
+import { BONUS_QUERIES } from "@/lib/unsplashQueries";
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 24 },
@@ -27,6 +29,7 @@ const VIBE_LABELS: Record<keyof UserProfile, { low: string; high: string; label:
 };
 
 const MAX_SCORE = 120;
+const BONUS_CACHE_KEY = "unsplash_bonus_cache";
 
 function normalizeTo100(value: number) {
   return Math.round(((value + MAX_SCORE) / (MAX_SCORE * 2)) * 100);
@@ -52,28 +55,110 @@ type TripData = {
   trip3_reason: string;
 };
 
+type BonusCard = { id: string; label: string; imageUrl: string };
+type BonusMode = "idle" | "loading" | "rating" | "submitting" | "done";
+
 export default function ResultsPage() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
   const [tripData, setTripData] = useState<TripData | null>(null);
+  const [tripId, setTripId] = useState<string | null>(null);
+
+  const [bonusMode, setBonusMode] = useState<BonusMode>("idle");
+  const [bonusCards, setBonusCards] = useState<BonusCard[]>([]);
+  const [bonusIndex, setBonusIndex] = useState(0);
+  const [bonusRatings, setBonusRatings] = useState<{ imageUrl: string; liked: boolean }[]>([]);
 
   useEffect(() => {
     if (authLoading) return;
     if (!user) { router.replace("/auth"); return; }
 
-    const tripId =
+    const id =
       new URLSearchParams(window.location.search).get("tripId") ||
       localStorage.getItem("current_trip_id");
 
-    if (!tripId) { router.replace("/"); return; }
+    if (!id) { router.replace("/"); return; }
+    setTripId(id);
 
-    getDoc(doc(db, "users", user.uid, "trips", tripId))
+    getDoc(doc(db, "users", user.uid, "trips", id))
       .then((snap) => {
         if (!snap.exists()) { router.replace("/"); return; }
         setTripData(snap.data() as TripData);
       })
       .catch(() => router.replace("/"));
   }, [user, authLoading, router]);
+
+  async function startBonusRating() {
+    setBonusMode("loading");
+    const cached = localStorage.getItem(BONUS_CACHE_KEY);
+    if (cached) {
+      try {
+        setBonusCards(JSON.parse(cached));
+        setBonusIndex(0);
+        setBonusRatings([]);
+        setBonusMode("rating");
+        return;
+      } catch {}
+    }
+    try {
+      const results = await Promise.all(
+        BONUS_QUERIES.map(async (query, idx) => {
+          const res = await fetch(
+            `https://api.unsplash.com/photos/random?query=${encodeURIComponent(query)}&client_id=${process.env.NEXT_PUBLIC_UNSPLASH_KEY}`
+          );
+          const data = await res.json();
+          return {
+            id: data.id ?? `bonus-${idx}`,
+            label: query,
+            imageUrl: data.urls.regular,
+          };
+        })
+      );
+      localStorage.setItem(BONUS_CACHE_KEY, JSON.stringify(results));
+      setBonusCards(results);
+      setBonusIndex(0);
+      setBonusRatings([]);
+      setBonusMode("rating");
+    } catch {
+      setBonusMode("idle");
+    }
+  }
+
+  async function handleBonusRate(liked: boolean) {
+    const card = bonusCards[bonusIndex];
+    const newRatings = [...bonusRatings, { imageUrl: card.imageUrl, liked }];
+
+    if (bonusIndex + 1 < bonusCards.length) {
+      setBonusRatings(newRatings);
+      setBonusIndex((i) => i + 1);
+      return;
+    }
+
+    setBonusMode("submitting");
+
+    for (const { imageUrl, liked: l } of newRatings) {
+      try {
+        await authedFetch(`${process.env.NEXT_PUBLIC_API_URL}/score-image`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image_url: imageUrl, feedback: l ? 1 : 0, trip_id: tripId }),
+        });
+      } catch {}
+    }
+
+    try {
+      await authedFetch(`${process.env.NEXT_PUBLIC_API_URL}/travel-profile?trip_id=${tripId}`);
+    } catch {}
+
+    if (user && tripId) {
+      try {
+        const snap = await getDoc(doc(db, "users", user.uid, "trips", tripId));
+        if (snap.exists()) setTripData(snap.data() as TripData);
+      } catch {}
+    }
+
+    setBonusMode("done");
+  }
 
   if (!tripData) return null;
 
@@ -168,11 +253,90 @@ export default function ResultsPage() {
           </button>
         </Animate>
         <Animate i={15}>
+          <button
+            className="btn-refine"
+            onClick={startBonusRating}
+            disabled={bonusMode === "loading" || bonusMode === "submitting"}
+          >
+            {bonusMode === "loading" ? "Loading images..." : "Rate 5 more images"}
+          </button>
+        </Animate>
+        <Animate i={16}>
           <button className="btn-new-trip" onClick={() => router.push("/swipe")}>
             New trip
           </button>
         </Animate>
       </section>
+
+      {(bonusMode === "rating" || bonusMode === "submitting" || bonusMode === "done") && (
+        <div className="bonus-overlay">
+          <div className="bonus-modal">
+
+            {bonusMode === "rating" && bonusCards[bonusIndex] && (
+              <>
+                <div className="bonus-modal__header">
+                  <p className="bonus-modal__title">Rate this vibe</p>
+                  <div className="bonus-modal__meta">
+                    <span className="bonus-modal__counter">{bonusIndex + 1} / {bonusCards.length}</span>
+                    <button
+                      className="bonus-modal__close"
+                      onClick={() => setBonusMode("idle")}
+                      aria-label="Close"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+                <div className="bonus-modal__image-wrap">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={bonusCards[bonusIndex].imageUrl}
+                    alt={bonusCards[bonusIndex].label}
+                    className="bonus-modal__image"
+                  />
+                  <div className="bonus-modal__image-caption">
+                    {bonusCards[bonusIndex].label}
+                  </div>
+                </div>
+                <div className="bonus-modal__actions">
+                  <button className="btn-skip" onClick={() => handleBonusRate(false)} aria-label="Skip">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                  <button className="btn-like" onClick={() => handleBonusRate(true)} aria-label="Like">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </button>
+                </div>
+              </>
+            )}
+
+            {bonusMode === "submitting" && (
+              <div className="bonus-modal__status">
+                <motion.div
+                  className="loading-spinner__ring"
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1.1, repeat: Infinity, ease: "linear" }}
+                />
+                <p className="bonus-modal__status-text">Updating your profile...</p>
+              </div>
+            )}
+
+            {bonusMode === "done" && (
+              <div className="bonus-modal__status">
+                <p className="bonus-modal__done-title">Profile updated</p>
+                <p className="bonus-modal__done-sub">Your results have been refined based on your ratings.</p>
+                <button className="btn-new-trip bonus-modal__done-btn" onClick={() => setBonusMode("idle")}>
+                  View results
+                </button>
+              </div>
+            )}
+
+          </div>
+        </div>
+      )}
 
     </main>
   );

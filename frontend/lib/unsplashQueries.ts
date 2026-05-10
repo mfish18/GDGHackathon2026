@@ -12,3 +12,11 @@ export const UNSPLASH_QUERIES = [
   "quiet library aesthetic",
   "festival crowd travel",
 ];
+
+export const BONUS_QUERIES = [
+  "rooftop bar city view",
+  "hidden waterfall jungle",
+  "train through countryside",
+  "night market street food",
+  "sunrise mountain hike",
+];
