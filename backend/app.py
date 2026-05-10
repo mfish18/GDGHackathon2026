@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from pydantic import BaseModel
 from PIL import Image
 import torch
@@ -12,7 +12,12 @@ from dotenv import load_dotenv
 import os
 import json
 import hashlib
+import firebase_admin
+from firebase_admin import credentials, auth, firestore
+from auth import verify_firebase_token, get_current_user
+from firebase import firebase_init
 
+firebase_init()
 app = FastAPI()
 
 load_dotenv()
@@ -231,7 +236,12 @@ def generate_travel_profile(scores):
         raise
 
 @app.post("/score-image")
-def score_image(req: ImageRequest):
+def score_image(
+    req: ImageRequest,
+    user=Depends(get_current_user)
+):
+    uid = user["uid"]
+
     start = time.perf_counter()
 
     response = requests.get(req.image_url)
@@ -246,34 +256,39 @@ def score_image(req: ImageRequest):
     end = time.perf_counter()
 
     return {
+        "uid": uid,
         "scores": scores,
         "user_profile": user_profile,
         "inference_time_sec": round(end - start, 4)
     }
 
 @app.get("/travel-profile")
-def travel_profile():
+def travel_profile(user=Depends(get_current_user)):
     try:
         key = hash_profile(user_profile)
 
-        # CACHE HIT
         if key in travel_profile_cache:
             return {
+                "uid": user["uid"],
                 "cached": True,
                 "data": travel_profile_cache[key]
             }
 
-        # CACHE MISS → call model
         result = generate_travel_profile(user_profile)
-
         travel_profile_cache[key] = result
 
         return {
+            "uid": user["uid"],
             "cached": False,
             "data": result
         }
 
     except Exception as e:
-        return {
-            "error": str(e)
-        }
+        return {"error": str(e)}
+    
+@app.get("/verify-token")
+def verify_route(user=Depends(get_current_user)):
+    return {
+        "message": "You are logged in",
+        "uid": user["uid"]
+    }
