@@ -286,6 +286,47 @@
   @apply text-paper/70 text-sm leading-relaxed;
 }
 
+/* ============================================================
+   VIBE BREAKDOWN
+   ============================================================ */
+
+.vibe-list {
+  @apply space-y-5;
+}
+
+.vibe-row {
+  @apply flex flex-col gap-1.5;
+}
+
+.vibe-row__header {
+  @apply flex items-center justify-between;
+}
+
+.vibe-row__label {
+  @apply font-mono text-xs text-paper/60 uppercase tracking-widest;
+}
+
+.vibe-row__ends {
+  @apply flex gap-3;
+}
+
+.vibe-row__low {
+  @apply font-mono text-xs text-muted;
+}
+
+.vibe-row__high {
+  @apply font-mono text-xs text-accent;
+}
+
+.vibe-track {
+  @apply h-1 bg-white/10 rounded-full overflow-hidden;
+}
+
+.vibe-fill {
+  @apply h-full bg-accent rounded-full;
+}
+
+
 .btn-retake {
   @apply font-mono px-8 py-3.5 border border-white/20 rounded-full
          text-paper/60 text-sm hover:border-accent hover:text-accent
