@@ -54,6 +54,7 @@ export default function SwipePage() {
   const { user, loading: authLoading, signOut } = useAuth();
   const [cards, setCards] = useState<TravelCard[]>([]);
   const [tripId, setTripId] = useState<string | null>(null);
+  const [tripReady, setTripReady] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) router.replace("/auth");
@@ -66,8 +67,12 @@ export default function SwipePage() {
       .then((data) => {
         setTripId(data.trip_id);
         localStorage.setItem("current_trip_id", data.trip_id);
+        setTripReady(true);
       })
-      .catch((err) => console.error("Failed to create trip:", err));
+      .catch((err) => {
+        console.error("Failed to create trip:", err);
+        setTripReady(true); // allow swiping even if trip creation fails, scores just won't save
+      });
   }, [user]);
 
   const [loading, setLoading] = useState(true);
@@ -251,7 +256,7 @@ export default function SwipePage() {
         <button
           className="btn-skip"
           onClick={() => handleSwipe("skip")}
-          disabled={cards.length === 0}
+          disabled={cards.length === 0 || !tripReady}
           aria-label="Skip"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -262,7 +267,7 @@ export default function SwipePage() {
         <button
           className="btn-like"
           onClick={() => handleSwipe("like")}
-          disabled={cards.length === 0}
+          disabled={cards.length === 0 || !tripReady}
           aria-label="Like"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

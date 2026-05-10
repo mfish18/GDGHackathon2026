@@ -27,8 +27,9 @@ export default function LoadingPage() {
     const start = Date.now();
 
     const tripId = localStorage.getItem("current_trip_id");
-    const fetchProfile = authedFetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/travel-profile?trip_id=${tripId}`
+    const fetchProfile = (tripId
+      ? authedFetch(`${process.env.NEXT_PUBLIC_API_URL}/travel-profile?trip_id=${tripId}`)
+      : Promise.reject(new Error("No trip ID"))
     )
       .then((res) => res.json())
       .then((res) => {
