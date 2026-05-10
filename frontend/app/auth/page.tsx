@@ -242,7 +242,7 @@ export default function AuthPage() {
     <AnimatePresence>
       {showResetModal && (
         <motion.div
-          className="fixed inset-0 flex items-center justify-center bg-black z-50"
+          className="fixed inset-0 flex items-center justify-center bg-black/90 z-50"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
