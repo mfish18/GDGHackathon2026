@@ -269,46 +269,6 @@ def score_image(req: ImageRequest, user=Depends(get_current_user)):
 
     return {"status": "success", "trip_id": req.trip_id}
 
-# @app.post("/score-image")
-# def score_image(
-#     req: ImageRequest,
-#     user=Depends(get_current_user)
-# ):
-#     uid = user["uid"]
-#     user_ref = db.collection("users").document(uid)
-
-#     start = time.perf_counter()
-
-#     response = requests.get(req.image_url)
-#     image = Image.open(BytesIO(response.content)).convert("RGB")
-
-#     image_features = encode_image(image)
-
-#     scores = compute_scores(image_features)
-
-#     update_user_profile(scores, req.feedback)
-
-#     doc = user_ref.get()
-#     if doc.exists:
-#         current_data = doc.to_dict()
-#     else:
-#         # First time user! Initialize defaults
-#         current_scores = {"energy": 0, "nature": 0, "nightlife": 0, "luxury": 0, "social_density": 0}
-
-#     user_ref.set({
-#         "user_scores": scores,
-#         "last_updated": firestore.SERVER_TIMESTAMP
-#     }, merge=True) # merge=True ensures we don't overwrite other fields like total_trips
-
-#     end = time.perf_counter()
-
-#     return {
-#         "uid": uid,   
-#         "scores": scores,
-#         "user_profile": user_profile,
-#         "inference_time_sec": round(end - start, 4)
-#     }
-
 @app.get("/travel-profile")
 def travel_profile(trip_id: str, user=Depends(get_current_user)):
     uid = user["uid"]
@@ -333,29 +293,7 @@ def travel_profile(trip_id: str, user=Depends(get_current_user)):
 
     return {"trip_id": trip_id, "data": ai_response}
 
-# @app.get("/travel-profile")
-# def travel_profile(user=Depends(get_current_user)):
-#     try:
-#         key = hash_profile(user_profile)
 
-#         if key in travel_profile_cache:
-#             return {
-#                 "uid": user["uid"],
-#                 "cached": True,
-#                 "data": travel_profile_cache[key]
-#             }
-
-#         result = generate_travel_profile(user_profile)
-#         travel_profile_cache[key] = result
-
-#         return {
-#             "uid": user["uid"],
-#             "cached": False,
-#             "data": result
-#         }
-
-#     except Exception as e:
-#         return {"error": str(e)}
     
 @app.get("/verify-token")
 def verify_route(user=Depends(get_current_user)):
