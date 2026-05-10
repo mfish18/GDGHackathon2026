@@ -214,7 +214,7 @@ def generate_travel_profile(scores):
     """
     
     response = gemini_client.models.generate_content(
-        model="gemini-2.5-flash",
+        model="gemini-3.1-flash-lite",
         contents=prompt,
         config={
             "max_output_tokens": 1200,
