@@ -1,22 +1,72 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import SwipeCard from "@/components/SwipeCard";
 import { CARDS, TravelCard } from "@/lib/data";
 import { saveResults } from "@/lib/store";
+import { UNSPLASH_QUERIES } from "@/lib/unsplashQueries";
+
 
 export default function Home() {
   const router = useRouter();
-  const [cards, setCards] = useState<TravelCard[]>(CARDS);
+  const [cards, setCards] = useState<TravelCard[]>([]);
+  const [loading, setLoading] = useState(true);
   const [liked, setLiked] = useState<TravelCard[]>([]);
   const [skipped, setSkipped] = useState<TravelCard[]>([]);
   const [exiting, setExiting] = useState<{ id: string; dir: "like" | "skip" } | null>(null);
 
-  const total = CARDS.length;
+  const CACHE_KEY = "unsplash_cards_cache";
+  
+  const total = UNSPLASH_QUERIES.length;
   const remaining = cards.length;
-  const progress = ((total - remaining) / total) * 100;
+
+  const progress =
+    total > 0 ? ((total - remaining) / total) * 100 : 0;
+
+  useEffect(() => {
+    const loadCards = async () => {
+      try {
+        const cached = localStorage.getItem(CACHE_KEY);
+
+        if (cached) {
+          setCards(JSON.parse(cached));
+          setLoading(false);
+          return;
+        }
+        const results = await Promise.all(
+          UNSPLASH_QUERIES.map(async (query: string, idx: number) => {
+            const res = await fetch(
+              `https://api.unsplash.com/photos/random?query=${encodeURIComponent(
+                query
+              )}&client_id=${process.env.NEXT_PUBLIC_UNSPLASH_KEY}`
+            );
+
+            const data = await res.json();
+
+            return {
+              id: data.id ?? `${query}-${idx}`,
+              label: query,
+              location: data.user?.location || "Unknown",
+              imageUrl: data.urls.regular,
+            };
+          })
+        );
+
+        const shuffled = results.sort(() => Math.random() - 0.5);
+
+        setCards(shuffled);
+        localStorage.setItem(CACHE_KEY, JSON.stringify(shuffled));
+      } catch (err) {
+        console.error("Failed loading cards:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCards();
+  }, []);
 
   const handleSwipe = useCallback(
     (direction: "like" | "skip") => {
@@ -42,7 +92,15 @@ export default function Home() {
     },
     [cards, liked, skipped, router]
   );
-
+  if (loading) {
+    return (
+      <main className="swipe-page">
+        <div className="swipe-stack__empty">
+          <p className="font-mono text-muted">Generating your travel DNA...</p>
+        </div>
+      </main>
+    );
+  }
   return (
     <main className="swipe-page">
       <header className="swipe-header">
@@ -78,10 +136,10 @@ export default function Home() {
                   animate={
                     isExiting
                       ? {
-                          x: exiting.dir === "like" ? 400 : -400,
-                          rotate: exiting.dir === "like" ? 20 : -20,
-                          opacity: 0,
-                        }
+                        x: exiting.dir === "like" ? 400 : -400,
+                        rotate: exiting.dir === "like" ? 20 : -20,
+                        opacity: 0,
+                      }
                       : {}
                   }
                   transition={{ duration: 0.35, ease: "easeIn" }}
