@@ -92,12 +92,11 @@ export default function LoadingPage() {
           ))}
         </div>
 
-        <div className="loading-bar">
+        <div className="loading-spinner">
           <motion.div
-            className="loading-bar__fill"
-            initial={{ width: "0%" }}
-            animate={{ width: "100%" }}
-            transition={{ duration: 3.2, ease: "easeInOut" }}
+            className="loading-spinner__ring"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1.1, repeat: Infinity, ease: "linear" }}
           />
         </div>
       </motion.div>
