@@ -26,7 +26,7 @@ export default function LoadingPage() {
 
     const start = Date.now();
 
-    const fetchProfile = authedFetch("http://localhost:8000/travel-profile")
+    const fetchProfile = authedFetch(`${process.env.NEXT_PUBLIC_API_URL}/travel-profile`)
       .then((res) => res.json())
       .then((res) => {
         const data = res.data ?? res;

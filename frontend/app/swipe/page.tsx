@@ -72,7 +72,7 @@ export default function SwipePage() {
 
 
   useEffect(() => { user?.getIdToken().then(t => console.log("TOKEN:", t)); }, [user]);
-  
+
   useEffect(() => {
     const loadCards = async () => {
       try {
@@ -121,7 +121,7 @@ export default function SwipePage() {
       const top = cards[cards.length - 1];
       if (!top) return;
 
-      const scorePromise = authedFetch("http://localhost:8000/score-image", {
+      const scorePromise = authedFetch(`${process.env.NEXT_PUBLIC_API_URL}/score-image`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
