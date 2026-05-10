@@ -4,16 +4,10 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import type { Variants } from "framer-motion";
-import {
-  loadResults,
-  clearResults,
-  loadUserProfile,
-  loadTravelProfile,
-  clearTravelProfile,
-  UserProfile,
-  TravelProfile,
-} from "@/lib/store";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/authContext";
+import type { UserProfile } from "@/lib/store";
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 24 },
@@ -46,37 +40,52 @@ function Animate({ i, children, className }: { i: number; children: React.ReactN
   );
 }
 
-type PageState = {
-  userProfile: UserProfile | null;
-  travelProfile: TravelProfile | null;
+type TripData = {
+  user_score: UserProfile;
+  title: string;
+  lifestyle_caption: string;
+  trip1_location: string;
+  trip1_reason: string;
+  trip2_location: string;
+  trip2_reason: string;
+  trip3_location: string;
+  trip3_reason: string;
 };
-
-function initPageState(): PageState | null {
-  if (typeof window === "undefined") return null;
-  const data = loadResults();
-  if (!data) return null;
-  return {
-    userProfile: loadUserProfile(),
-    travelProfile: loadTravelProfile(),
-  };
-}
 
 export default function ResultsPage() {
   const router = useRouter();
-  const { user, signOut } = useAuth();
-  const [state] = useState<PageState | null>(initPageState);
+  const { user, loading: authLoading, signOut } = useAuth();
+  const [tripData, setTripData] = useState<TripData | null>(null);
 
   useEffect(() => {
-    if (!state) router.push("/");
-  }, [state, router]);
+    if (authLoading) return;
+    if (!user) { router.replace("/auth"); return; }
 
-  if (!state) return null;
-  const { userProfile, travelProfile } = state;
+    const tripId =
+      new URLSearchParams(window.location.search).get("tripId") ||
+      localStorage.getItem("current_trip_id");
+
+    if (!tripId) { router.replace("/"); return; }
+
+    getDoc(doc(db, "users", user.uid, "trips", tripId))
+      .then((snap) => {
+        if (!snap.exists()) { router.replace("/"); return; }
+        setTripData(snap.data() as TripData);
+      })
+      .catch(() => router.replace("/"));
+  }, [user, authLoading, router]);
+
+  if (!tripData) return null;
+
+  const destinations = [
+    { name: tripData.trip1_location, reason: tripData.trip1_reason },
+    { name: tripData.trip2_location, reason: tripData.trip2_reason },
+    { name: tripData.trip3_location, reason: tripData.trip3_reason },
+  ];
 
   return (
     <main className="page">
 
-      {/* Header */}
       <header className="results-header">
         <div>
           <p className="results-header__title">Travel DNA</p>
@@ -97,97 +106,69 @@ export default function ResultsPage() {
         )}
       </header>
 
-      {/* Travel Personality */}
       <section className="results-section">
         <Animate i={0}><p className="results-label">Travel Personality</p></Animate>
-        {travelProfile ? (
-          <>
-            <Animate i={1}>
-              <h1 className="results-title mt-1">{travelProfile.caption}</h1>
-            </Animate>
-            <Animate i={2}>
-              <p className="results-summary mt-4">{travelProfile.travel_lifestyle}</p>
-            </Animate>
-          </>
-        ) : (
-          <p className="results-summary mt-2 text-muted">Could not load travel personality.</p>
-        )}
+        <Animate i={1}>
+          <h1 className="results-title mt-1">{tripData.lifestyle_caption}</h1>
+        </Animate>
       </section>
 
-      {/* Top Destinations */}
       <section className="results-section">
         <Animate i={3}><p className="results-label">Top Destinations</p></Animate>
-        {travelProfile?.destinations?.length ? (
-          <div className="destination-list mt-2">
-            {travelProfile.destinations.map((dest, i) => (
-              <Animate key={dest.name} i={4 + i}>
-                <div className="destination-card">
-                  <div className="destination-card__header">
-                    <span className="destination-card__city">{dest.name}</span>
-                  </div>
-                  <p className="destination-card__reason">{dest.reason}</p>
+        <div className="destination-list mt-2">
+          {destinations.map((dest, i) => (
+            <Animate key={dest.name} i={4 + i}>
+              <div className="destination-card">
+                <div className="destination-card__header">
+                  <span className="destination-card__city">{dest.name}</span>
                 </div>
-              </Animate>
-            ))}
-          </div>
-        ) : (
-          <p className="results-summary mt-2 text-muted">Could not load destinations.</p>
-        )}
+                <p className="destination-card__reason">{dest.reason}</p>
+              </div>
+            </Animate>
+          ))}
+        </div>
       </section>
 
-      {/* Vibe Breakdown */}
-      {userProfile && (
-        <section className="results-section">
-          <Animate i={7}><p className="results-label">Vibe Breakdown</p></Animate>
-          <div className="vibe-list">
-            {(Object.keys(VIBE_LABELS) as (keyof UserProfile)[]).map((key, i) => {
-              const { label, low, high } = VIBE_LABELS[key];
-              const pct = normalizeTo100(userProfile[key]);
-              return (
-                <Animate key={key} i={8 + i}>
-                  <div className="vibe-row">
-                    <div className="vibe-row__header">
-                      <span className="vibe-row__label">{label}</span>
-                      <span className="vibe-row__ends">
-                        <span className={`vibe-row__low${userProfile[key] < 0 ? " vibe-row__end--active" : ""}`}>{low}</span>
-                        <span className={`vibe-row__high${userProfile[key] > 0 ? " vibe-row__end--active" : ""}`}>{high}</span>
-                      </span>
-                    </div>
-                    <div className="vibe-track">
-                      <motion.div
-                        className="vibe-fill"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${pct}%` }}
-                        transition={{ delay: (8 + i) * 0.12 + 0.3, duration: 0.7, ease: "easeOut" }}
-                      />
-                    </div>
+      <section className="results-section">
+        <Animate i={7}><p className="results-label">Vibe Breakdown</p></Animate>
+        <div className="vibe-list">
+          {(Object.keys(VIBE_LABELS) as (keyof UserProfile)[]).map((key, i) => {
+            const { label, low, high } = VIBE_LABELS[key];
+            const score = tripData.user_score?.[key] ?? 0;
+            const pct = normalizeTo100(score);
+            return (
+              <Animate key={key} i={8 + i}>
+                <div className="vibe-row">
+                  <div className="vibe-row__header">
+                    <span className="vibe-row__label">{label}</span>
+                    <span className="vibe-row__ends">
+                      <span className={`vibe-row__low${score < 0 ? " vibe-row__end--active" : ""}`}>{low}</span>
+                      <span className={`vibe-row__high${score > 0 ? " vibe-row__end--active" : ""}`}>{high}</span>
+                    </span>
                   </div>
-                </Animate>
-              );
-            })}
-          </div>
-        </section>
-      )}
+                  <div className="vibe-track">
+                    <motion.div
+                      className="vibe-fill"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${pct}%` }}
+                      transition={{ delay: (8 + i) * 0.12 + 0.3, duration: 0.7, ease: "easeOut" }}
+                    />
+                  </div>
+                </div>
+              </Animate>
+            );
+          })}
+        </div>
+      </section>
 
-      {/* CTA */}
       <section className="results-section--cta">
         <Animate i={14}>
-          <button
-            className="btn-retake"
-            onClick={() => router.push("/")}
-          >
+          <button className="btn-retake" onClick={() => router.push("/")}>
             Back to trips
           </button>
         </Animate>
         <Animate i={15}>
-          <button
-            className="btn-new-trip"
-            onClick={() => {
-              clearResults();
-              clearTravelProfile();
-              router.push("/swipe");
-            }}
-          >
+          <button className="btn-new-trip" onClick={() => router.push("/swipe")}>
             New trip
           </button>
         </Animate>

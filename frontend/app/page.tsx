@@ -2,42 +2,12 @@
 
 import { useState, useEffect, useRef } from "react";
 import type { User } from "firebase/auth";
+import { collection, getDocs, orderBy, query } from "firebase/firestore";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/authContext";
+import { db } from "@/lib/firebase";
 import type { Trip } from "@/lib/store";
-
-// Mock data — replace with Firestore fetch when backend is ready
-const MOCK_TRIPS: Trip[] = [
-  {
-    id: "trip-1",
-    name: "Summer 2025",
-    user_score: { energy: 40, nature: 60, nightlife: -20, luxury: 30, social_density: 10 },
-    title: "The Wandering Aesthete",
-    lifestyle_caption: "You seek beauty in slow mornings and spontaneous detours through cobblestone streets.",
-    trip1: "Lisbon",
-    trip1reason: "The melancholy charm of fado and sun-soaked tiles speaks to your soul.",
-    trip2: "Kyoto",
-    trip2reason: "Ancient temples and seasonal rituals match your contemplative pace.",
-    trip3: "Porto",
-    trip3reason: "Riverside wine culture and golden hour architecture are made for you.",
-    createdAt: "2025-06-15T10:00:00Z",
-  },
-  {
-    id: "trip-2",
-    name: "Spring Break",
-    user_score: { energy: 80, nature: -30, nightlife: 90, luxury: 50, social_density: 70 },
-    title: "The Urban Pulse",
-    lifestyle_caption: "You thrive in the electric hum of cities that never sleep.",
-    trip1: "Tokyo",
-    trip1reason: "Neon-lit streets and 24/7 energy match your relentless curiosity.",
-    trip2: "New York",
-    trip2reason: "The city's density and diversity fuels your need for constant stimulation.",
-    trip3: "Seoul",
-    trip3reason: "K-culture, street food, and rooftop bars align with your social instincts.",
-    createdAt: "2025-03-20T08:00:00Z",
-  },
-];
 
 function AccountButton({ user, onSignOut }: { user: User; onSignOut: () => Promise<void> }) {
   const [open, setOpen] = useState(false);
@@ -140,11 +110,35 @@ function NewTripCard({ onClick, index }: { onClick: () => void; index: number })
 export default function DashboardPage() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
-  const [trips] = useState<Trip[]>(MOCK_TRIPS);
+  const [trips, setTrips] = useState<Trip[]>([]);
 
   useEffect(() => {
     if (!authLoading && !user) router.replace("/auth");
   }, [user, authLoading, router]);
+
+  useEffect(() => {
+    if (!user) return;
+    const tripsRef = collection(db, "users", user.uid, "trips");
+    getDocs(query(tripsRef, orderBy("created_at", "desc"))).then((snapshot) => {
+      setTrips(snapshot.docs.map((doc) => {
+        const d = doc.data();
+        return {
+          id: doc.id,
+          name: d.created_at?.toDate().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) ?? "",
+          user_score: d.user_score,
+          title: d.title ?? "",
+          lifestyle_caption: d.lifestyle_caption ?? "",
+          trip1: d.trip1_location ?? "",
+          trip1reason: d.trip1_reason ?? "",
+          trip2: d.trip2_location ?? "",
+          trip2reason: d.trip2_reason ?? "",
+          trip3: d.trip3_location ?? "",
+          trip3reason: d.trip3_reason ?? "",
+          createdAt: d.created_at?.toDate().toISOString() ?? new Date().toISOString(),
+        };
+      }));
+    }).catch(console.error);
+  }, [user]);
 
   if (authLoading || !user) return null;
 

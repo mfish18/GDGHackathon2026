@@ -26,7 +26,10 @@ export default function LoadingPage() {
 
     const start = Date.now();
 
-    const fetchProfile = authedFetch(`${process.env.NEXT_PUBLIC_API_URL}/travel-profile`)
+    const tripId = localStorage.getItem("current_trip_id");
+    const fetchProfile = authedFetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/travel-profile?trip_id=${tripId}`
+    )
       .then((res) => res.json())
       .then((res) => {
         const data = res.data ?? res;

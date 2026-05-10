@@ -15,7 +15,7 @@ import hashlib
 import firebase_admin
 from firebase_admin import credentials, auth, firestore
 from auth import verify_firebase_token, get_current_user
-from backend.firebase_config import firebase_init
+from firebase_config import firebase_init
 
 firebase_init()
 app = FastAPI()
@@ -241,31 +241,31 @@ def generate_travel_profile(scores):
         raise
 
 
+@app.post("/trips")
+def create_trip(user=Depends(get_current_user)):
+    uid = user["uid"]
+    trip_ref = db.collection("users").document(uid).collection("trips").document()
+    trip_ref.set({
+        "trip_id": trip_ref.id,
+        "user_score": {"energy": 0, "nature": 0, "nightlife": 0, "luxury": 0, "social_density": 0},
+        "created_at": firestore.SERVER_TIMESTAMP
+    })
+    return {"trip_id": trip_ref.id}
+
 @app.post("/score-image")
 def score_image(req: ImageRequest, user=Depends(get_current_user)):
     uid = user["uid"]
-    
-    # Target the SPECIFIC trip document
     trip_ref = db.collection("users").document(uid).collection("trips").document(req.trip_id)
-    
-    # 1. Calculate the vibe scores for the new image
+
     response = requests.get(req.image_url)
     image = Image.open(BytesIO(response.content)).convert("RGB")
     image_features = encode_image(image)
-    new_image_scores = compute_scores(image_features) 
+    new_image_scores = compute_scores(image_features)
 
-    # 2. Prepare the Atomic Update for this specific trip
     direction = 1 if req.feedback == 1 else -1
-    updates = {}
-    
-    for k, val in new_image_scores.items():
-        # This updates the 'user_score' map inside the specific trip document
-        updates[f"user_score.{k}"] = firestore.Increment(direction * val)
-
+    updates = {f"user_score.{k}": firestore.Increment(direction * val) for k, val in new_image_scores.items()}
     updates["last_updated"] = firestore.SERVER_TIMESTAMP
-
-    # 3. Update the Trip Document
-    trip_ref.update(updates) 
+    trip_ref.update(updates)
 
     return {"status": "success", "trip_id": req.trip_id}
 
@@ -310,28 +310,16 @@ def score_image(req: ImageRequest, user=Depends(get_current_user)):
 #     }
 
 @app.get("/travel-profile")
-def create_new_seasonal_trip(user=Depends(get_current_user)):
+def travel_profile(trip_id: str, user=Depends(get_current_user)):
     uid = user["uid"]
-    
-    # 1. Reference the user
-    user_ref = db.collection("users").document(uid)
-    
-    # 2. Get their current scores (the 'Brain')
-    current_state = user_ref.get().to_dict()
-    default_scores = {"energy": 0, "nature": 5, "nightlife": 0, "luxury": 0, "social_density": 0}
-    current_scores = current_state.get("user_scores", default_scores)
+    trip_ref = db.collection("users").document(uid).collection("trips").document(trip_id)
 
-    # 3. Generate the AI Content
+    trip_data = trip_ref.get().to_dict() or {}
+    current_scores = trip_data.get("user_score", {"energy": 0, "nature": 5, "nightlife": 0, "luxury": 0, "social_density": 0})
+
     ai_response = generate_travel_profile(current_scores)
 
-    # 4. Create a NEW trip document with a RANDOM ID
-    # Calling .document() with no arguments creates the random ID automatically
-    new_trip_ref = user_ref.collection("trips").document()
-
-    # 5. Save the snapshot
-    new_trip_ref.set({
-        "trip_id": new_trip_ref.id, # This is your 'random val'
-        "user_score": current_scores, # Frozen scores for this specific trip
+    trip_ref.update({
         "title": ai_response["title"],
         "lifestyle_caption": ai_response["caption"],
         "trip1_location": ai_response["destinations"][0]["name"],
@@ -340,10 +328,10 @@ def create_new_seasonal_trip(user=Depends(get_current_user)):
         "trip2_reason": ai_response["destinations"][1]["reason"],
         "trip3_location": ai_response["destinations"][2]["name"],
         "trip3_reason": ai_response["destinations"][2]["reason"],
-        "created_at": firestore.SERVER_TIMESTAMP 
+        "last_updated": firestore.SERVER_TIMESTAMP
     })
 
-    return {"message": "New trip saved!", "trip_id": new_trip_ref.id}
+    return {"trip_id": trip_id, "data": ai_response}
 
 # @app.get("/travel-profile")
 # def travel_profile(user=Depends(get_current_user)):
