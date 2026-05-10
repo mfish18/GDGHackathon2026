@@ -219,6 +219,7 @@
 
 .results-header__title {
   @apply font-display text-lg font-bold text-paper tracking-tight;
+  color: inherit;
 }
 
 .results-header__user {
@@ -432,7 +433,7 @@
 
 .dashboard-header__link {
   color: var(--color-accent);
-  text-decoration: none;
+  text-decoration: underline;
 }
 
 .dashboard-header__link:hover {
