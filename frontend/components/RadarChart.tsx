@@ -2,9 +2,10 @@
 
 import { motion } from "framer-motion";
 
-const SIZE = 280;
+const SIZE = 220;
 const CENTER = SIZE / 2;
-const RADIUS = 96;
+const RADIUS = 76;
+const FLOOR = 0.15; // minimum polygon radius as a fraction, so no axis ever collapses to center
 
 function toXY(angle: number, r: number) {
   return { x: CENTER + r * Math.cos(angle), y: CENTER + r * Math.sin(angle) };
@@ -12,11 +13,21 @@ function toXY(angle: number, r: number) {
 
 type VibeScore = { label: string; value: number };
 
+function minMaxNormalize(scores: VibeScore[]): number[] {
+  const vals = scores.map((s) => s.value);
+  const min = Math.min(...vals);
+  const max = Math.max(...vals);
+  const range = max - min || 1;
+  // stretch so the lowest score sits at FLOOR and highest at 1.0
+  return vals.map((v) => FLOOR + ((v - min) / range) * (1 - FLOOR));
+}
+
 export function RadarChart({ scores }: { scores: VibeScore[] }) {
   const n = scores.length;
   const angles = scores.map((_, i) => (i * 2 * Math.PI) / n - Math.PI / 2);
+  const normalized = minMaxNormalize(scores);
 
-  const dataPoints = scores.map(({ value }, i) => toXY(angles[i], (value / 100) * RADIUS));
+  const dataPoints = normalized.map((frac, i) => toXY(angles[i], frac * RADIUS));
   const dataStr = dataPoints.map((p) => `${p.x},${p.y}`).join(" ");
 
   const gridLevels = [0.25, 0.5, 0.75, 1];
@@ -71,13 +82,13 @@ export function RadarChart({ scores }: { scores: VibeScore[] }) {
           strokeLinejoin="round"
         />
         {dataPoints.map((p, i) => (
-          <circle key={i} cx={p.x} cy={p.y} r={3.5} fill="#c8401a" />
+          <circle key={i} cx={p.x} cy={p.y} r={3} fill="#c8401a" />
         ))}
       </motion.g>
 
       {/* Axis labels */}
       {scores.map(({ label }, i) => {
-        const pos = toXY(angles[i], RADIUS + 24);
+        const pos = toXY(angles[i], RADIUS + 20);
         return (
           <text
             key={label}
@@ -85,7 +96,7 @@ export function RadarChart({ scores }: { scores: VibeScore[] }) {
             y={pos.y}
             textAnchor="middle"
             dominantBaseline="middle"
-            fontSize={9.5}
+            fontSize={9}
             fontFamily="DM Mono, monospace"
             fill="#7a7570"
             letterSpacing="0.08em"

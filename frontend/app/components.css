@@ -349,12 +349,16 @@
    VIBE BREAKDOWN — RADAR CHART
    ============================================================ */
 
+.vibe-section-row {
+  @apply flex flex-row items-center gap-4 mt-2;
+}
+
 .radar-wrap {
-  @apply flex justify-center mt-2 mb-4;
+  @apply shrink-0;
 }
 
 .vibe-legend {
-  @apply grid grid-cols-1 gap-2 mt-2;
+  @apply flex flex-col gap-3 flex-1;
 }
 
 .vibe-legend-row {
@@ -362,7 +366,7 @@
 }
 
 .vibe-legend__label {
-  @apply text-paper/50 uppercase tracking-widest w-20 shrink-0;
+  @apply text-paper/50 uppercase tracking-widest w-16 shrink-0;
 }
 
 .vibe-legend__end {

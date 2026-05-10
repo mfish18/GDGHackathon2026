@@ -220,27 +220,29 @@ export default function ResultsPage() {
 
       <section className="results-section">
         <Animate i={7}><p className="results-label">Vibe Breakdown</p></Animate>
-        <div className="radar-wrap">
-          <RadarChart
-            scores={(Object.keys(VIBE_LABELS) as (keyof UserProfile)[]).map((key) => ({
-              label: VIBE_LABELS[key].label,
-              value: normalizeTo100(tripData.user_score?.[key] ?? 0),
-            }))}
-          />
-        </div>
-        <div className="vibe-legend">
-          {(Object.keys(VIBE_LABELS) as (keyof UserProfile)[]).map((key) => {
-            const { label, low, high } = VIBE_LABELS[key];
-            const score = tripData.user_score?.[key] ?? 0;
-            return (
-              <div key={key} className="vibe-legend-row">
-                <span className="vibe-legend__label">{label}</span>
-                <span className={`vibe-legend__end${score <= 0 ? " vibe-legend__end--active" : ""}`}>{low}</span>
-                <span className="vibe-legend__sep">→</span>
-                <span className={`vibe-legend__end${score > 0 ? " vibe-legend__end--active" : ""}`}>{high}</span>
-              </div>
-            );
-          })}
+        <div className="vibe-section-row">
+          <div className="radar-wrap">
+            <RadarChart
+              scores={(Object.keys(VIBE_LABELS) as (keyof UserProfile)[]).map((key) => ({
+                label: VIBE_LABELS[key].label,
+                value: normalizeTo100(tripData.user_score?.[key] ?? 0),
+              }))}
+            />
+          </div>
+          <div className="vibe-legend">
+            {(Object.keys(VIBE_LABELS) as (keyof UserProfile)[]).map((key) => {
+              const { label, low, high } = VIBE_LABELS[key];
+              const score = tripData.user_score?.[key] ?? 0;
+              return (
+                <div key={key} className="vibe-legend-row">
+                  <span className="vibe-legend__label">{label}</span>
+                  <span className={`vibe-legend__end${score <= 0 ? " vibe-legend__end--active" : ""}`}>{low}</span>
+                  <span className="vibe-legend__sep">→</span>
+                  <span className={`vibe-legend__end${score > 0 ? " vibe-legend__end--active" : ""}`}>{high}</span>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </section>
 
