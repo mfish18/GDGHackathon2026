@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 const SIZE = 220;
 const CENTER = SIZE / 2;
 const RADIUS = 76;
-const FLOOR = 0.15; // minimum polygon radius as a fraction, so no axis ever collapses to center
 
 function toXY(angle: number, r: number) {
   return { x: CENTER + r * Math.cos(angle), y: CENTER + r * Math.sin(angle) };
@@ -13,21 +12,11 @@ function toXY(angle: number, r: number) {
 
 type VibeScore = { label: string; value: number };
 
-function minMaxNormalize(scores: VibeScore[]): number[] {
-  const vals = scores.map((s) => s.value);
-  const min = Math.min(...vals);
-  const max = Math.max(...vals);
-  const range = max - min || 1;
-  // stretch so the lowest score sits at FLOOR and highest at 1.0
-  return vals.map((v) => FLOOR + ((v - min) / range) * (1 - FLOOR));
-}
-
 export function RadarChart({ scores }: { scores: VibeScore[] }) {
   const n = scores.length;
   const angles = scores.map((_, i) => (i * 2 * Math.PI) / n - Math.PI / 2);
-  const normalized = minMaxNormalize(scores);
 
-  const dataPoints = normalized.map((frac, i) => toXY(angles[i], frac * RADIUS));
+  const dataPoints = scores.map(({ value }, i) => toXY(angles[i], (value / 100) * RADIUS));
   const dataStr = dataPoints.map((p) => `${p.x},${p.y}`).join(" ");
 
   const gridLevels = [0.25, 0.5, 0.75, 1];
