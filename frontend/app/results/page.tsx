@@ -4,8 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import type { Variants } from "framer-motion";
-import { loadResults, clearResults } from "@/lib/store";
-import { computeArchetype, ARCHETYPES, Archetype } from "@/lib/data";
+import { loadResults, clearResults, loadUserProfile, UserProfile } from "@/lib/store";
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 24 },
@@ -16,6 +15,20 @@ const fadeUp: Variants = {
   }),
 };
 
+const VIBE_LABELS: Record<keyof UserProfile, { low: string; high: string; label: string }> = {
+  energy:         { label: "Energy",    low: "Calm",   high: "Chaotic" },
+  nature:         { label: "Nature",    low: "Urban",  high: "Wild"    },
+  nightlife:      { label: "Nightlife", low: "Quiet",  high: "Lively"  },
+  luxury:         { label: "Luxury",    low: "Budget", high: "Luxury"  },
+  social_density: { label: "Crowds",    low: "Solo",   high: "Social"  },
+};
+
+const MAX_SCORE = 120;
+
+function normalizeTo100(value: number) {
+  return Math.round(((value + MAX_SCORE) / (MAX_SCORE * 2)) * 100);
+}
+
 function Animate({ i, children, className }: { i: number; children: React.ReactNode; className?: string }) {
   return (
     <motion.div className={className} custom={i} initial="hidden" animate="visible" variants={fadeUp}>
@@ -24,100 +37,67 @@ function Animate({ i, children, className }: { i: number; children: React.ReactN
   );
 }
 
+type PageState = { userProfile: UserProfile | null };
+
+function initPageState(): PageState | null {
+  if (typeof window === "undefined") return null;
+  const data = loadResults();
+  if (!data) return null;
+  return { userProfile: loadUserProfile() };
+}
+
 export default function ResultsPage() {
   const router = useRouter();
-  const [archetype, setArchetype] = useState<Archetype | null>(null);
-  const [archetypeKey, setArchetypeKey] = useState("");
+  const [state] = useState<PageState | null>(initPageState);
 
   useEffect(() => {
-    const data = loadResults();
-    if (!data) { router.push("/"); return; }
-    const key = computeArchetype(data.liked);
-    setArchetypeKey(key);
-    setArchetype(ARCHETYPES[key]);
-  }, [router]);
+    if (!state) router.push("/");
+  }, [state, router]);
 
-  if (!archetype) return null;
+  if (!state) return null;
+  const { userProfile } = state;
 
   return (
     <main className="page">
 
-      {/* Hero */}
-      <section className="results-section">
-        <Animate i={0}><p className="results-eyebrow">Your Travel DNA</p></Animate>
-        <Animate i={1}><h1 className="results-title">{archetype.name}</h1></Animate>
-        <Animate i={2}><p className="results-tagline">{archetype.tagline}</p></Animate>
-        <Animate i={3}><p className="results-summary">{archetype.personalitySummary}</p></Animate>
-      </section>
-
-      {/* Archetype */}
-      <section className="results-section">
-        <Animate i={4}><p className="results-label">Archetype Profile</p></Animate>
-        <Animate i={5} className="archetype-card">
-          <div className="archetype-card__body">
-            <div>
-              <h2 className="archetype-card__name">{archetype.name}</h2>
-              <p className="archetype-card__description">{archetype.description}</p>
-            </div>
-            <div className="archetype-card__badge">
-              <span className="archetype-card__badge-text">
-                {archetypeKey.slice(0, 2).toUpperCase()}
-              </span>
-            </div>
+      {/* Vibe Breakdown */}
+      {userProfile && (
+        <section className="results-section">
+          <Animate i={0}><p className="results-label">Vibe Breakdown</p></Animate>
+          <div className="vibe-list">
+            {(Object.keys(VIBE_LABELS) as (keyof UserProfile)[]).map((key, i) => {
+              const { label, low, high } = VIBE_LABELS[key];
+              const pct = normalizeTo100(userProfile[key]);
+              return (
+                <Animate key={key} i={1 + i}>
+                  <div className="vibe-row">
+                    <div className="vibe-row__header">
+                      <span className="vibe-row__label">{label}</span>
+                      <span className="vibe-row__ends">
+                        <span className="vibe-row__low">{low}</span>
+                        <span className="vibe-row__high">{high}</span>
+                      </span>
+                    </div>
+                    <div className="vibe-track">
+                      <motion.div
+                        className="vibe-fill"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${pct}%` }}
+                        transition={{ delay: (1 + i) * 0.12 + 0.3, duration: 0.7, ease: "easeOut" }}
+                      />
+                    </div>
+                  </div>
+                </Animate>
+              );
+            })}
           </div>
-        </Animate>
-      </section>
-
-      {/* Destinations */}
-      <section className="results-section">
-        <Animate i={6}><p className="results-label">Matched Destinations</p></Animate>
-        <div className="destination-list">
-          {archetype.destinations.map((dest, i) => (
-            <Animate key={dest.city} i={7 + i} className="destination-card">
-              <div className="destination-card__header">
-                <h3 className="destination-card__city">{dest.city}</h3>
-                <span className="destination-card__country">{dest.country}</span>
-              </div>
-              <p className="destination-card__reason">{dest.reason}</p>
-            </Animate>
-          ))}
-        </div>
-      </section>
-
-      {/* Itinerary */}
-      <section className="results-section">
-        <Animate i={10}>
-          <p className="results-label">Sample Itinerary — {archetype.destinations[0].city}</p>
-        </Animate>
-        <div className="itinerary-list">
-          {archetype.itinerary.map((day, i) => (
-            <Animate key={day.day} i={11 + i}>
-              <div className="itinerary-day__header">
-                <span className="itinerary-day__number">DAY {day.day}</span>
-                <div className="itinerary-day__divider" />
-                <span className="itinerary-day__title">{day.title}</span>
-              </div>
-              <ul className="itinerary-day__activities">
-                {day.activities.map((activity, j) => (
-                  <li key={j} className="itinerary-activity">
-                    <span className="itinerary-activity__dot">
-                      <svg width="6" height="6" viewBox="0 0 6 6" fill="currentColor">
-                        <circle cx="3" cy="3" r="3" />
-                      </svg>
-                    </span>
-                    <p className="itinerary-activity__text">{activity}</p>
-                  </li>
-                ))}
-              </ul>
-            </Animate>
-          ))}
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* CTA */}
       <section className="results-section--cta">
-        <Animate i={15}><p className="cta-note">Results are saved to this session only.</p></Animate>
-        <Animate i={16}>
+        <Animate i={6}><p className="cta-note">Results are saved to this session only.</p></Animate>
+        <Animate i={7}>
           <button className="btn-retake" onClick={() => { clearResults(); router.push("/"); }}>
             Retake the scan
           </button>

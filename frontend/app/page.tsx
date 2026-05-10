@@ -4,8 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import SwipeCard from "@/components/SwipeCard";
-import { CARDS, TravelCard } from "@/lib/data";
-import { saveResults } from "@/lib/store";
+import { TravelCard } from "@/lib/data";
+import { saveResults, saveUserProfile } from "@/lib/store";
 import { UNSPLASH_QUERIES } from "@/lib/unsplashQueries";
 
 
@@ -18,7 +18,7 @@ export default function Home() {
   const [exiting, setExiting] = useState<{ id: string; dir: "like" | "skip" } | null>(null);
 
   const CACHE_KEY = "unsplash_cards_cache";
-  
+
   const total = UNSPLASH_QUERIES.length;
   const remaining = cards.length;
 
@@ -69,22 +69,43 @@ export default function Home() {
   }, []);
 
   const handleSwipe = useCallback(
-    (direction: "like" | "skip") => {
+    async (direction: "like" | "skip") => {
       const top = cards[cards.length - 1];
       if (!top) return;
+
+      fetch("http://localhost:8000/score-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          image_url: top.imageUrl,
+          feedback: direction === "like" ? 1 : 0,
+        }),
+      })
+        .then((res) => res.json())
+        .then((data) => { if (data.user_profile) saveUserProfile(data.user_profile); })
+        .catch((err) => { console.error("Scoring API failed:", err); });
 
       setExiting({ id: top.id, dir: direction });
 
       setTimeout(() => {
         const next = cards.slice(0, -1);
-        if (direction === "like") setLiked((prev) => [...prev, top]);
-        else setSkipped((prev) => [...prev, top]);
+
+        if (direction === "like") {
+          setLiked((prev) => [...prev, top]);
+        } else {
+          setSkipped((prev) => [...prev, top]);
+        }
+
         setCards(next);
         setExiting(null);
 
         if (next.length === 0) {
-          const newLiked = direction === "like" ? [...liked, top] : liked;
-          const newSkipped = direction === "skip" ? [...skipped, top] : skipped;
+          const newLiked =
+            direction === "like" ? [...liked, top] : liked;
+
+          const newSkipped =
+            direction === "skip" ? [...skipped, top] : skipped;
+
           saveResults(newLiked, newSkipped);
           router.push("/loading");
         }
