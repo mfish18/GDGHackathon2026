@@ -215,11 +215,18 @@ def generate_travel_profile(scores):
     )
 
     try:
-        # BEST: direct structured JSON output
-        return json.loads(response.text)
+        text = response.text.strip()
+        # Strip markdown code fences if the model adds them anyway
+        if text.startswith("```"):
+            text = text.split("```")[1]
+            if text.startswith("json"):
+                text = text[4:]
+            text = text.strip()
+        # raw_decode stops after the first valid JSON object, ignoring trailing content
+        result, _ = json.JSONDecoder().raw_decode(text)
+        return result
 
     except json.JSONDecodeError:
-        # fallback safety (debugging only)
         print("RAW MODEL OUTPUT:\n", response.text)
         raise
 
