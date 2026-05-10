@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { saveTravelProfile } from "@/lib/store";
+import { authedFetch } from "@/lib/authedFetch";
 
 const STEPS = [
   "Parsing visual instincts",
@@ -25,7 +26,7 @@ export default function LoadingPage() {
 
     const start = Date.now();
 
-    const fetchProfile = fetch("http://localhost:8000/travel-profile")
+    const fetchProfile = authedFetch("http://localhost:8000/travel-profile")
       .then((res) => res.json())
       .then((res) => {
         const data = res.data ?? res;
