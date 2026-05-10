@@ -1,24 +1,13 @@
-from fastapi import Header, HTTPException, Depends
+from fastapi import HTTPException, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from firebase_admin import auth
 
-def verify_firebase_token(authorization: str = Header(None)):
-    # 1. Check if header exists
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(
-            status_code=401, 
-            detail="Missing or invalid Authorization header"
-        )
+_bearer = HTTPBearer()
 
+def verify_firebase_token(credentials: HTTPAuthorizationCredentials = Depends(_bearer)):
     try:
-        # 2. Extract token (Handling 'Bearer <token>')
-        token = authorization.split(" ")[1]
-        
-        # 3. Verify with Firebase
-        decoded_token = auth.verify_id_token(token)
-        
-        # Return the whole dict so app.py can use user["uid"]
+        decoded_token = auth.verify_id_token(credentials.credentials)
         return decoded_token
-
     except Exception as e:
         raise HTTPException(status_code=401, detail=f"Invalid token: {str(e)}")
     

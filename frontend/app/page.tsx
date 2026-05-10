@@ -54,6 +54,8 @@ export default function Home() {
   const { user, loading: authLoading, signOut } = useAuth();
   const [cards, setCards] = useState<TravelCard[]>([]);
 
+  useEffect(() => { user?.getIdToken().then(t => console.log("TOKEN:", t)); }, [user]);
+
   useEffect(() => {
     if (!authLoading && !user) router.replace("/auth");
   }, [user, authLoading, router]);
@@ -118,7 +120,7 @@ export default function Home() {
       const top = cards[cards.length - 1];
       if (!top) return;
 
-      fetch("http://localhost:8000/score-image", {
+      authedFetch("http://localhost:8000/score-image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
