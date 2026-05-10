@@ -30,9 +30,8 @@ gemini_client = genai.Client(
 
 app.add_middleware(
     CORSMiddleware,
+    allow_origin_regex=r"^https:\/\/gdg-hackathon2026(-[a-zA-Z0-9-]+)*\.vercel\.app$",
     allow_origins=[
-        "https://gdg-hackathon2026-git-main-mfish18s-projects.vercel.app",
-        "https://gdg-hackathon2026.vercel.app",
         "http://localhost:3000",
     ],
     allow_credentials=True,
@@ -306,7 +305,7 @@ def delete_trip(trip_id: str, user=Depends(get_current_user)):
 
     # Delete the document
     trip_ref.delete()
-    
+
     return {"message": f"Trip {trip_id} successfully deleted", "trip_id": trip_id}
 
 @app.get("/verify-token")
