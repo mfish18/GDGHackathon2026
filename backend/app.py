@@ -20,6 +20,8 @@ from firebase import firebase_init
 firebase_init()
 app = FastAPI()
 
+db = firestore.client()
+
 load_dotenv()
 
 gemini_client = genai.Client(
@@ -49,12 +51,11 @@ device = "mps" if torch.backends.mps.is_available() else "cpu"
 model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32").to(device)
 processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
 
-
 class ImageRequest(BaseModel):
     image_url: str
     feedback: int
-
-
+    trip_id: str
+    
 def scale(score):
     return round(1 + score * 9)
 
@@ -235,56 +236,134 @@ def generate_travel_profile(scores):
         print("RAW MODEL OUTPUT:\n", response.text)
         raise
 
+
 @app.post("/score-image")
-def score_image(
-    req: ImageRequest,
-    user=Depends(get_current_user)
-):
+def score_image(req: ImageRequest, user=Depends(get_current_user)):
     uid = user["uid"]
-
-    start = time.perf_counter()
-
+    
+    # Target the SPECIFIC trip document
+    trip_ref = db.collection("users").document(uid).collection("trips").document(req.trip_id)
+    
+    # 1. Calculate the vibe scores for the new image
     response = requests.get(req.image_url)
     image = Image.open(BytesIO(response.content)).convert("RGB")
-
     image_features = encode_image(image)
+    new_image_scores = compute_scores(image_features) 
 
-    scores = compute_scores(image_features)
+    # 2. Prepare the Atomic Update for this specific trip
+    direction = 1 if req.feedback == 1 else -1
+    updates = {}
+    
+    for k, val in new_image_scores.items():
+        # This updates the 'user_score' map inside the specific trip document
+        updates[f"user_score.{k}"] = firestore.Increment(direction * val)
 
-    update_user_profile(scores, req.feedback)
+    updates["last_updated"] = firestore.SERVER_TIMESTAMP
 
-    end = time.perf_counter()
+    # 3. Update the Trip Document
+    trip_ref.update(updates) 
 
-    return {
-        "uid": uid,
-        "scores": scores,
-        "user_profile": user_profile,
-        "inference_time_sec": round(end - start, 4)
-    }
+    return {"status": "success", "trip_id": req.trip_id}
+
+# @app.post("/score-image")
+# def score_image(
+#     req: ImageRequest,
+#     user=Depends(get_current_user)
+# ):
+#     uid = user["uid"]
+#     user_ref = db.collection("users").document(uid)
+
+#     start = time.perf_counter()
+
+#     response = requests.get(req.image_url)
+#     image = Image.open(BytesIO(response.content)).convert("RGB")
+
+#     image_features = encode_image(image)
+
+#     scores = compute_scores(image_features)
+
+#     update_user_profile(scores, req.feedback)
+
+#     doc = user_ref.get()
+#     if doc.exists:
+#         current_data = doc.to_dict()
+#     else:
+#         # First time user! Initialize defaults
+#         current_scores = {"energy": 0, "nature": 0, "nightlife": 0, "luxury": 0, "social_density": 0}
+
+#     user_ref.set({
+#         "user_scores": scores,
+#         "last_updated": firestore.SERVER_TIMESTAMP
+#     }, merge=True) # merge=True ensures we don't overwrite other fields like total_trips
+
+#     end = time.perf_counter()
+
+#     return {
+#         "uid": uid,   
+#         "scores": scores,
+#         "user_profile": user_profile,
+#         "inference_time_sec": round(end - start, 4)
+#     }
 
 @app.get("/travel-profile")
-def travel_profile(user=Depends(get_current_user)):
-    try:
-        key = hash_profile(user_profile)
+def create_new_seasonal_trip(user=Depends(get_current_user)):
+    uid = user["uid"]
+    
+    # 1. Reference the user
+    user_ref = db.collection("users").document(uid)
+    
+    # 2. Get their current scores (the 'Brain')
+    current_state = user_ref.get().to_dict()
+    default_scores = {"energy": 0, "nature": 5, "nightlife": 0, "luxury": 0, "social_density": 0}
+    current_scores = current_state.get("user_scores", default_scores)
 
-        if key in travel_profile_cache:
-            return {
-                "uid": user["uid"],
-                "cached": True,
-                "data": travel_profile_cache[key]
-            }
+    # 3. Generate the AI Content
+    ai_response = generate_travel_profile(current_scores)
 
-        result = generate_travel_profile(user_profile)
-        travel_profile_cache[key] = result
+    # 4. Create a NEW trip document with a RANDOM ID
+    # Calling .document() with no arguments creates the random ID automatically
+    new_trip_ref = user_ref.collection("trips").document()
 
-        return {
-            "uid": user["uid"],
-            "cached": False,
-            "data": result
-        }
+    # 5. Save the snapshot
+    new_trip_ref.set({
+        "trip_id": new_trip_ref.id, # This is your 'random val'
+        "user_score": current_scores, # Frozen scores for this specific trip
+        "title": ai_response["title"],
+        "lifestyle_caption": ai_response["caption"],
+        "trip1_location": ai_response["destinations"][0]["name"],
+        "trip1_reason": ai_response["destinations"][0]["reason"],
+        "trip2_location": ai_response["destinations"][1]["name"],
+        "trip2_reason": ai_response["destinations"][1]["reason"],
+        "trip3_location": ai_response["destinations"][2]["name"],
+        "trip3_reason": ai_response["destinations"][2]["reason"],
+        "created_at": firestore.SERVER_TIMESTAMP 
+    })
 
-    except Exception as e:
-        return {"error": str(e)}
+    return {"message": "New trip saved!", "trip_id": new_trip_ref.id}
+
+# @app.get("/travel-profile")
+# def travel_profile(user=Depends(get_current_user)):
+#     try:
+#         key = hash_profile(user_profile)
+
+#         if key in travel_profile_cache:
+#             return {
+#                 "uid": user["uid"],
+#                 "cached": True,
+#                 "data": travel_profile_cache[key]
+#             }
+
+#         result = generate_travel_profile(user_profile)
+#         travel_profile_cache[key] = result
+
+#         return {
+#             "uid": user["uid"],
+#             "cached": False,
+#             "data": result
+#         }
+
+#     except Exception as e:
+#         return {"error": str(e)}
     
 @app.get("/verify-token")
 def verify_route(user=Depends(get_current_user)):
