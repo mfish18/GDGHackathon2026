@@ -80,6 +80,8 @@ export default function SwipePage() {
   const [skipped, setSkipped] = useState<TravelCard[]>([]);
   const [exiting, setExiting] = useState<{ id: string; dir: "like" | "skip" } | null>(null);
 
+  const CACHE_KEY = "unsplash_cards_cache";
+
   const total = UNSPLASH_QUERIES.length;
   const remaining = cards.length;
 
@@ -92,6 +94,13 @@ export default function SwipePage() {
   useEffect(() => {
     const loadCards = async () => {
       try {
+        const cached = localStorage.getItem(CACHE_KEY);
+
+        if (cached) {
+          setCards(JSON.parse(cached));
+          setLoading(false);
+          return;
+        }
         const results = await Promise.all(
           UNSPLASH_QUERIES.map(async (query: string, idx: number) => {
             const res = await fetch(
@@ -114,6 +123,7 @@ export default function SwipePage() {
         const shuffled = results.sort(() => Math.random() - 0.5);
 
         setCards(shuffled);
+        localStorage.setItem(CACHE_KEY, JSON.stringify(shuffled));
       } catch (err) {
         console.error("Failed loading cards:", err);
       } finally {
