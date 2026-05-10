@@ -239,80 +239,83 @@ export default function AuthPage() {
             </button>
           )}
           
-          <AnimatePresence>
-            {showResetModal && (
-              <motion.div
-                className="fixed inset-0 flex items-center justify-center bg-black/80 z-50"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-              >
-                {/* IMPORTANT: stop click from closing accidentally if you later add backdrop click */}
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  className="auth-card w-full max-w-sm"
-                >
-                  <h2 className="auth-title text-lg mb-2 text-center">Reset Password</h2>
-                  <p className="auth-subtitle text-sm mb-4 text-center">
-                    Enter your email and we'll send you a reset link.
-                  </p>
+    <AnimatePresence>
+      {showResetModal && (
+        <motion.div
+          className="fixed inset-0 flex items-center justify-center bg-black z-50"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          {/* IMPORTANT: stop click from closing accidentally if you later add backdrop click */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="auth-card w-full max-w-sm"
+          >
+            <h2 className="auth-title text-lg mb-2 text-center">
+              Reset Password
+            </h2>
 
-                  <input
-                    type="email"
-                    className="auth-input mb-3"
-                    placeholder="you@example.com"
-                    value={resetEmail}
-                    onChange={(e) => setResetEmail(e.target.value)}
-                    disabled={busy}
-                  />
+            <p className="auth-subtitle text-sm mb-4 text-center">
+              Enter your email and we'll send you a reset link.
+            </p>
 
-                  {error && (
-                    <p className="text-xs text-rose-400 mb-2 font-mono">{error}</p>
-                  )}
+            <input
+              type="email"
+              className="auth-input mb-3"
+              placeholder="you@example.com"
+              value={resetEmail}
+              onChange={(e) => setResetEmail(e.target.value)}
+              disabled={busy}
+            />
 
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      className="auth-submit flex-1"
-                      onClick={async () => {
-                        setError("");
-
-                        if (!resetEmail) {
-                          setError("Please enter your email.");
-                          return;
-                        }
-
-                        try {
-                          setBusy(true);
-                          await forgotPassword(resetEmail);
-                          setShowResetModal(false);
-                          setResetEmail("");
-                        } catch (err: unknown) {
-                          const code = (err as { code?: string }).code ?? "";
-                          setError(friendlyError(code));
-                        } finally {
-                          setBusy(false);
-                        }
-                      }}
-                      disabled={busy}
-                    >
-                      Send link
-                    </button>
-
-                    <button
-                      type="button"
-                      className="auth-tab bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-md transition"
-                      onClick={() => setShowResetModal(false)}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </motion.div>
-              </motion.div>
+            {error && (
+              <p className="text-xs text-rose-400 mb-2 font-mono">{error}</p>
             )}
-          </AnimatePresence>
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                className="auth-submit flex-1"
+                onClick={async () => {
+                  setError("");
+
+                  if (!resetEmail) {
+                    setError("Please enter your email.");
+                    return;
+                  }
+
+                  try {
+                    setBusy(true);
+                    await forgotPassword(resetEmail);
+                    setShowResetModal(false);
+                    setResetEmail("");
+                  } catch (err: unknown) {
+                    const code = (err as { code?: string }).code ?? "";
+                    setError(friendlyError(code));
+                  } finally {
+                    setBusy(false);
+                  }
+                }}
+                disabled={busy}
+              >
+                Send link
+              </button>
+
+              <button
+                type="button"
+                className="flex-1 bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded-md transition"
+                onClick={() => setShowResetModal(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
 
           <AnimatePresence>
             {tab === "register" && (
