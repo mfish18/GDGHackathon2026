@@ -56,7 +56,7 @@ function GoogleIcon() {
 
 export default function AuthPage() {
   const router = useRouter();
-  const { signInWithEmail, signUpWithEmail, signInWithGoogle, user, loading } = useAuth();
+  const { signInWithEmail, signUpWithEmail, signInWithGoogle, user, loading, forgotPassword } = useAuth();
 
   const [tab, setTab] = useState<Tab>("login");
   const [email, setEmail] = useState("");
@@ -65,6 +65,8 @@ export default function AuthPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
 
   useEffect(() => {
     if (!loading && user) {
@@ -124,6 +126,12 @@ export default function AuthPage() {
     } finally {
       setBusy(false);
     }
+  }
+
+  function handleForgotPassword() {
+    setError(null);
+    setResetEmail("");
+    setShowResetModal(true);
   }
 
   return (
@@ -215,6 +223,96 @@ export default function AuthPage() {
             />
             {tab === "register" && <PasswordStrengthMeter password={password} />}
           </div>
+
+          {tab === "login" && (
+            <button
+              type="button"
+              onClick={() => {
+                setResetEmail("");
+                setShowResetModal(true);
+                setError(null);
+              }}
+              className="text-xs text-emerald-400 hover:text-emerald-300 mt-2 font-mono"
+              disabled={busy}
+            >
+              Forgot password?
+            </button>
+          )}
+          
+          <AnimatePresence>
+            {showResetModal && (
+              <motion.div
+                className="fixed inset-0 flex items-center justify-center bg-black/60 z-50"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                {/* IMPORTANT: stop click from closing accidentally if you later add backdrop click */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="auth-card w-full max-w-sm"
+                >
+                  <h2 className="auth-title text-lg mb-2">Reset Password</h2>
+                  <p className="auth-subtitle text-sm mb-4">
+                    Enter your email and we'll send you a reset link.
+                  </p>
+
+                  <input
+                    type="email"
+                    className="auth-input mb-3"
+                    placeholder="you@example.com"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    disabled={busy}
+                  />
+
+                  {error && (
+                    <p className="text-xs text-rose-400 mb-2 font-mono">{error}</p>
+                  )}
+
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      className="auth-submit flex-1"
+                      onClick={async () => {
+                        setError("");
+
+                        if (!resetEmail) {
+                          setError("Please enter your email.");
+                          return;
+                        }
+
+                        try {
+                          setBusy(true);
+                          await forgotPassword(resetEmail);
+                          setShowResetModal(false);
+                          setResetEmail("");
+                        } catch (err: unknown) {
+                          const code = (err as { code?: string }).code ?? "";
+                          setError(friendlyError(code));
+                        } finally {
+                          setBusy(false);
+                        }
+                      }}
+                      disabled={busy}
+                    >
+                      Send link
+                    </button>
+
+                    <button
+                      type="button"
+                      className="auth-tab"
+                      onClick={() => setShowResetModal(false)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <AnimatePresence>
             {tab === "register" && (
