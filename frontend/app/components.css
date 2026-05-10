@@ -401,13 +401,13 @@
 }
 
 .btn-refine {
-  @apply mt-3 font-mono px-8 py-3.5 border border-accent/50 text-accent text-sm
+  @apply font-mono px-8 py-3.5 border border-accent/50 text-accent text-sm
          rounded-full hover:bg-accent/10 transition-all duration-200
          disabled:opacity-40 disabled:cursor-not-allowed;
 }
 
 .btn-new-trip {
-  @apply mt-3 font-mono px-8 py-3.5 bg-accent hover:bg-accent-hover
+  @apply font-mono px-8 py-3.5 bg-accent hover:bg-accent-hover
          text-paper text-sm rounded-full
          transition-all duration-200;
 }
