@@ -4,7 +4,15 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import type { Variants } from "framer-motion";
-import { loadResults, clearResults, loadUserProfile, UserProfile } from "@/lib/store";
+import {
+  loadResults,
+  clearResults,
+  loadUserProfile,
+  loadTravelProfile,
+  clearTravelProfile,
+  UserProfile,
+  TravelProfile,
+} from "@/lib/store";
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 24 },
@@ -37,13 +45,19 @@ function Animate({ i, children, className }: { i: number; children: React.ReactN
   );
 }
 
-type PageState = { userProfile: UserProfile | null };
+type PageState = {
+  userProfile: UserProfile | null;
+  travelProfile: TravelProfile | null;
+};
 
 function initPageState(): PageState | null {
   if (typeof window === "undefined") return null;
   const data = loadResults();
   if (!data) return null;
-  return { userProfile: loadUserProfile() };
+  return {
+    userProfile: loadUserProfile(),
+    travelProfile: loadTravelProfile(),
+  };
 }
 
 export default function ResultsPage() {
@@ -55,27 +69,65 @@ export default function ResultsPage() {
   }, [state, router]);
 
   if (!state) return null;
-  const { userProfile } = state;
+  const { userProfile, travelProfile } = state;
 
   return (
     <main className="page">
 
+      {/* Travel Personality */}
+      <section className="results-section">
+        <Animate i={0}><p className="results-label">Travel Personality</p></Animate>
+        {travelProfile ? (
+          <>
+            <Animate i={1}>
+              <h1 className="results-title mt-1">{travelProfile.caption}</h1>
+            </Animate>
+            <Animate i={2}>
+              <p className="results-summary mt-4">{travelProfile.travel_lifestyle}</p>
+            </Animate>
+          </>
+        ) : (
+          <p className="results-summary mt-2 text-muted">Could not load travel personality.</p>
+        )}
+      </section>
+
+      {/* Top Destinations */}
+      <section className="results-section">
+        <Animate i={3}><p className="results-label">Top Destinations</p></Animate>
+        {travelProfile?.destinations?.length ? (
+          <div className="destination-list mt-2">
+            {travelProfile.destinations.map((dest, i) => (
+              <Animate key={dest.name} i={4 + i}>
+                <div className="destination-card">
+                  <div className="destination-card__header">
+                    <span className="destination-card__city">{dest.name}</span>
+                  </div>
+                  <p className="destination-card__reason">{dest.reason}</p>
+                </div>
+              </Animate>
+            ))}
+          </div>
+        ) : (
+          <p className="results-summary mt-2 text-muted">Could not load destinations.</p>
+        )}
+      </section>
+
       {/* Vibe Breakdown */}
       {userProfile && (
         <section className="results-section">
-          <Animate i={0}><p className="results-label">Vibe Breakdown</p></Animate>
+          <Animate i={7}><p className="results-label">Vibe Breakdown</p></Animate>
           <div className="vibe-list">
             {(Object.keys(VIBE_LABELS) as (keyof UserProfile)[]).map((key, i) => {
               const { label, low, high } = VIBE_LABELS[key];
               const pct = normalizeTo100(userProfile[key]);
               return (
-                <Animate key={key} i={1 + i}>
+                <Animate key={key} i={8 + i}>
                   <div className="vibe-row">
                     <div className="vibe-row__header">
                       <span className="vibe-row__label">{label}</span>
                       <span className="vibe-row__ends">
-                        <span className="vibe-row__low">{low}</span>
-                        <span className="vibe-row__high">{high}</span>
+                        <span className={`vibe-row__low${userProfile[key] < 0 ? " vibe-row__end--active" : ""}`}>{low}</span>
+                        <span className={`vibe-row__high${userProfile[key] > 0 ? " vibe-row__end--active" : ""}`}>{high}</span>
                       </span>
                     </div>
                     <div className="vibe-track">
@@ -83,7 +135,7 @@ export default function ResultsPage() {
                         className="vibe-fill"
                         initial={{ width: 0 }}
                         animate={{ width: `${pct}%` }}
-                        transition={{ delay: (1 + i) * 0.12 + 0.3, duration: 0.7, ease: "easeOut" }}
+                        transition={{ delay: (8 + i) * 0.12 + 0.3, duration: 0.7, ease: "easeOut" }}
                       />
                     </div>
                   </div>
@@ -96,9 +148,16 @@ export default function ResultsPage() {
 
       {/* CTA */}
       <section className="results-section--cta">
-        <Animate i={6}><p className="cta-note">Results are saved to this session only.</p></Animate>
-        <Animate i={7}>
-          <button className="btn-retake" onClick={() => { clearResults(); router.push("/"); }}>
+        <Animate i={13}><p className="cta-note">Results are saved to this session only.</p></Animate>
+        <Animate i={14}>
+          <button
+            className="btn-retake"
+            onClick={() => {
+              clearResults();
+              clearTravelProfile();
+              router.push("/");
+            }}
+          >
             Retake the scan
           </button>
         </Animate>

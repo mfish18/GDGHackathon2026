@@ -314,8 +314,16 @@
   @apply font-mono text-xs text-muted;
 }
 
+.vibe-row__low.vibe-row__end--active {
+  @apply text-accent;
+}
+
 .vibe-row__high {
-  @apply font-mono text-xs text-accent;
+  @apply font-mono text-xs text-muted;
+}
+
+.vibe-row__high.vibe-row__end--active {
+  @apply text-accent;
 }
 
 .vibe-track {

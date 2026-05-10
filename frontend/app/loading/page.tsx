@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { saveTravelProfile } from "@/lib/store";
 
 const STEPS = [
   "Parsing visual instincts",
@@ -12,12 +13,39 @@ const STEPS = [
   "Generating itinerary",
 ];
 
+const MIN_DURATION_MS = 3500;
+
 export default function LoadingPage() {
   const router = useRouter();
+  const didFetch = useRef(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => router.push("/results"), 3500);
-    return () => clearTimeout(timer);
+    if (didFetch.current) return;
+    didFetch.current = true;
+
+    const start = Date.now();
+
+    const fetchProfile = fetch("http://localhost:8000/travel-profile")
+      .then((res) => res.json())
+      .then((res) => {
+        const data = res.data ?? res;
+        saveTravelProfile({
+          travel_lifestyle: data.travel_lifestyle ?? "",
+          caption: data.caption ?? "",
+          destinations: Array.isArray(data.destinations) ? data.destinations : [],
+        });
+      })
+      .catch(() => {});
+
+    const minWait = new Promise<void>((resolve) =>
+      setTimeout(resolve, MIN_DURATION_MS)
+    );
+
+    Promise.all([fetchProfile, minWait]).then(() => {
+      const elapsed = Date.now() - start;
+      const remaining = Math.max(0, MIN_DURATION_MS - elapsed);
+      setTimeout(() => router.push("/results"), remaining);
+    });
   }, [router]);
 
   return (

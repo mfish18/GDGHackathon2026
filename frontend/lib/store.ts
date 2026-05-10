@@ -49,3 +49,32 @@ export function loadUserProfile(): UserProfile | null {
     return null;
   }
 }
+
+const TRAVEL_PROFILE_KEY = "travel_dna_travel_profile";
+
+export type TravelProfile = {
+  travel_lifestyle: string;
+  caption: string;
+  destinations: { name: string; reason: string }[];
+};
+
+export function saveTravelProfile(profile: TravelProfile) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(TRAVEL_PROFILE_KEY, JSON.stringify(profile));
+}
+
+export function loadTravelProfile(): TravelProfile | null {
+  if (typeof window === "undefined") return null;
+  const raw = localStorage.getItem(TRAVEL_PROFILE_KEY);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+export function clearTravelProfile() {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(TRAVEL_PROFILE_KEY);
+}
