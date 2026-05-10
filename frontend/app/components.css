@@ -290,7 +290,15 @@
 
 .destination-card {
   @apply border border-white/10 rounded-xl p-5 bg-white/[0.02]
-         hover:bg-white/[0.05] transition-colors;
+         hover:bg-white/[0.05] transition-colors overflow-hidden;
+}
+
+.destination-card__photo {
+  display: block;
+  width: calc(100% + 2.5rem);
+  height: 6.5rem;
+  object-fit: cover;
+  margin: -1.25rem -1.25rem 1rem;
 }
 
 .destination-card__header {
