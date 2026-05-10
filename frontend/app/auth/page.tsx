@@ -242,7 +242,7 @@ export default function AuthPage() {
           <AnimatePresence>
             {showResetModal && (
               <motion.div
-                className="fixed inset-0 flex items-center justify-center bg-black/60 z-50"
+                className="fixed inset-0 flex items-center justify-center bg-black/80 z-50"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -254,8 +254,8 @@ export default function AuthPage() {
                   exit={{ opacity: 0, scale: 0.95 }}
                   className="auth-card w-full max-w-sm"
                 >
-                  <h2 className="auth-title text-lg mb-2">Reset Password</h2>
-                  <p className="auth-subtitle text-sm mb-4">
+                  <h2 className="auth-title text-lg mb-2 text-center">Reset Password</h2>
+                  <p className="auth-subtitle text-sm mb-4 text-center">
                     Enter your email and we'll send you a reset link.
                   </p>
 
@@ -303,7 +303,7 @@ export default function AuthPage() {
 
                     <button
                       type="button"
-                      className="auth-tab"
+                      className="auth-tab bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-md transition"
                       onClick={() => setShowResetModal(false)}
                     >
                       Cancel
