@@ -13,6 +13,7 @@ import {
   UserProfile,
   TravelProfile,
 } from "@/lib/store";
+import { useAuth } from "@/lib/authContext";
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 24 },
@@ -62,6 +63,7 @@ function initPageState(): PageState | null {
 
 export default function ResultsPage() {
   const router = useRouter();
+  const { user, signOut } = useAuth();
   const [state] = useState<PageState | null>(initPageState);
 
   useEffect(() => {
@@ -73,6 +75,27 @@ export default function ResultsPage() {
 
   return (
     <main className="page">
+
+      {/* Header */}
+      <header className="results-header">
+        <div>
+          <p className="results-header__title">Travel DNA</p>
+          {user?.displayName && (
+            <p className="results-header__user">{user.displayName}</p>
+          )}
+        </div>
+        {user && (
+          <button
+            className="results-header__signout"
+            onClick={async () => {
+              await signOut();
+              router.push("/auth");
+            }}
+          >
+            Sign out
+          </button>
+        )}
+      </header>
 
       {/* Travel Personality */}
       <section className="results-section">
