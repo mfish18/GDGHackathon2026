@@ -300,8 +300,8 @@
 
 .destination-card__photo {
   flex-shrink: 0;
-  width: 5rem;
-  height: 5rem;
+  width: 8rem;
+  height: 7rem;
   object-fit: cover;
   border-radius: 0.5rem;
 }
