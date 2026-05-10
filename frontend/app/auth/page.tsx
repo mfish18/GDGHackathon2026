@@ -246,6 +246,7 @@ export default function AuthPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          onClick={() => setShowResetModal(false)}
         >
           {/* IMPORTANT: stop click from closing accidentally if you later add backdrop click */}
           <motion.div
@@ -253,13 +254,14 @@ export default function AuthPage() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             className="auth-card w-full max-w-sm"
+            onClick={(e) => e.stopPropagation()}
           >
             <h2 className="auth-title text-lg mb-2 text-center">
               Reset Password
             </h2>
 
-            <p className="auth-subtitle text-sm mb-4 text-center">
-              Enter your email and we'll send you a reset link.
+            <p className="auth-subtitle normal-case text-sm mb-4 text-center">
+              Enter your email and we'll send you a reset link if it exists.
             </p>
 
             <input
