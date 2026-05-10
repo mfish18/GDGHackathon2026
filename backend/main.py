@@ -278,7 +278,7 @@ def travel_profile(trip_id: str, user=Depends(get_current_user)):
 
     ai_response = generate_travel_profile(current_scores)
 
-    trip_ref.update({
+    trip_ref.set({
         "title": ai_response["title"],
         "lifestyle_caption": ai_response["caption"],
         "trip1_location": ai_response["destinations"][0]["name"],
@@ -288,7 +288,7 @@ def travel_profile(trip_id: str, user=Depends(get_current_user)):
         "trip3_location": ai_response["destinations"][2]["name"],
         "trip3_reason": ai_response["destinations"][2]["reason"],
         "last_updated": firestore.SERVER_TIMESTAMP
-    })
+    }, merge=True)
 
     return {"trip_id": trip_id, "data": ai_response}
 

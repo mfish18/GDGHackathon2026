@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import type { Variants } from "framer-motion";
@@ -66,6 +66,7 @@ export default function ResultsPage() {
   const { user, loading: authLoading, signOut } = useAuth();
   const [tripData, setTripData] = useState<TripData | null>(null);
   const [tripId, setTripId] = useState<string | null>(null);
+  const didFetch = useRef(false);
 
   const [destPhotos, setDestPhotos] = useState<Record<string, string>>({});
 
@@ -77,6 +78,8 @@ export default function ResultsPage() {
   useEffect(() => {
     if (authLoading) return;
     if (!user) { router.replace("/auth"); return; }
+    if (didFetch.current) return;
+    didFetch.current = true;
 
     const id =
       new URLSearchParams(window.location.search).get("tripId") ||
