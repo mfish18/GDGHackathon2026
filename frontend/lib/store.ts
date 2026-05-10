@@ -78,3 +78,18 @@ export function clearTravelProfile() {
   if (typeof window === "undefined") return;
   localStorage.removeItem(TRAVEL_PROFILE_KEY);
 }
+
+export type Trip = {
+  id: string;
+  name: string;
+  user_score: UserProfile;
+  title: string;
+  lifestyle_caption: string;
+  trip1: string;
+  trip1reason: string;
+  trip2: string;
+  trip2reason: string;
+  trip3: string;
+  trip3reason: string;
+  createdAt: string;
+};
