@@ -38,3 +38,4 @@ next-env.d.ts
 venv/
 .vscode/
 __pycache__/
+firebase-service-account.json
