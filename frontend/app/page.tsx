@@ -121,10 +121,28 @@ function NewTripCard({ onClick, index }: { onClick: () => void; index: number })
   );
 }
 
+function ConfirmDeleteModal({ tripName, onConfirm, onCancel }: { tripName: string; onConfirm: () => void; onCancel: () => void }) {
+  return (
+    <div className="confirm-modal-overlay" onClick={onCancel}>
+      <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
+        <p className="confirm-modal__title">Delete trip?</p>
+        <p className="confirm-modal__body">
+          <span className="confirm-modal__trip-name">{tripName}</span> will be permanently deleted.
+        </p>
+        <div className="confirm-modal__actions">
+          <button className="confirm-modal__cancel" onClick={onCancel}>Cancel</button>
+          <button className="confirm-modal__delete" onClick={onConfirm}>Delete</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
   const [trips, setTrips] = useState<Trip[]>([]);
+  const [tripToDelete, setTripToDelete] = useState<Trip | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) router.replace("/auth");
@@ -157,12 +175,20 @@ export default function DashboardPage() {
   async function handleDelete(tripId: string) {
     await authedFetch(`${process.env.NEXT_PUBLIC_API_URL}/delete-trip/${tripId}`, { method: "DELETE" });
     setTrips(prev => prev.filter(t => t.id !== tripId));
+    setTripToDelete(null);
   }
 
   if (authLoading || !user) return null;
 
   return (
     <main className="dashboard-page">
+      {tripToDelete && (
+        <ConfirmDeleteModal
+          tripName={tripToDelete.title || tripToDelete.name}
+          onConfirm={() => handleDelete(tripToDelete.id)}
+          onCancel={() => setTripToDelete(null)}
+        />
+      )}
       <header className="dashboard-header">
         <div>
           <h1 className="dashboard-header__title">Travel DNA</h1>
@@ -195,7 +221,7 @@ export default function DashboardPage() {
               trip={trip}
               index={i}
               onClick={() => router.push(`/results?tripId=${trip.id}`)}
-              onDelete={() => handleDelete(trip.id)}
+              onDelete={() => setTripToDelete(trip)}
             />
           ))}
 

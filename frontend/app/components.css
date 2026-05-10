@@ -480,6 +480,42 @@
   @apply text-white/30 transition-transform duration-200;
 }
 
+/* ============================================================
+   Confirm Delete Modal
+   ============================================================ */
+
+.confirm-modal-overlay {
+  @apply fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm;
+}
+
+.confirm-modal {
+  @apply bg-zinc-900 border border-white/10 rounded-xl p-6 w-80 shadow-2xl;
+}
+
+.confirm-modal__title {
+  @apply font-display text-lg font-bold text-paper mb-2;
+}
+
+.confirm-modal__body {
+  @apply font-mono text-sm text-muted mb-6;
+}
+
+.confirm-modal__trip-name {
+  @apply text-paper font-semibold;
+}
+
+.confirm-modal__actions {
+  @apply flex gap-3 justify-end;
+}
+
+.confirm-modal__cancel {
+  @apply font-mono text-sm text-muted hover:text-paper border border-white/10 hover:border-white/20 px-4 py-2 rounded-lg transition-colors duration-200;
+}
+
+.confirm-modal__delete {
+  @apply font-mono text-sm text-white bg-red-600 hover:bg-red-500 px-4 py-2 rounded-lg transition-colors duration-200;
+}
+
 .trip-card:hover .trip-card__arrow {
   @apply translate-x-1 text-white/60;
 }
