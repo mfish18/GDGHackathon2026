@@ -1,17 +1,61 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import type { User } from "firebase/auth";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import SwipeCard from "@/components/SwipeCard";
 import { TravelCard } from "@/lib/data";
 import { saveResults, saveUserProfile } from "@/lib/store";
 import { UNSPLASH_QUERIES } from "@/lib/unsplashQueries";
+import { useAuth } from "@/lib/authContext";
 
+
+function AccountButton({ user, onSignOut }: { user: User; onSignOut: () => Promise<void> }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handle(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, [open]);
+
+  const initial = (user.displayName || user.email || "?")[0].toUpperCase();
+
+  async function handleSignOut() {
+    setOpen(false);
+    await onSignOut();
+  }
+
+  return (
+    <div className="account-wrap" ref={ref}>
+      <button className="account-btn" onClick={() => setOpen(o => !o)} aria-label="Account">
+        {initial}
+      </button>
+      {open && (
+        <div className="account-dropdown">
+          {user.displayName && <p className="account-dropdown__name">{user.displayName}</p>}
+          <p className="account-dropdown__email">{user.email}</p>
+          <hr className="account-dropdown__divider" />
+          <button className="account-dropdown__logout" onClick={handleSignOut}>Sign out</button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Home() {
   const router = useRouter();
+  const { user, loading: authLoading, signOut } = useAuth();
   const [cards, setCards] = useState<TravelCard[]>([]);
+
+  useEffect(() => {
+    if (!authLoading && !user) router.replace("/auth");
+  }, [user, authLoading, router]);
   const [loading, setLoading] = useState(true);
   const [liked, setLiked] = useState<TravelCard[]>([]);
   const [skipped, setSkipped] = useState<TravelCard[]>([]);
@@ -129,7 +173,10 @@ export default function Home() {
           <h1 className="swipe-header__title">Travel DNA</h1>
           <p className="swipe-header__subtitle">Visual preference scan</p>
         </div>
-        <span className="swipe-header__counter">{total - remaining} / {total}</span>
+        <div className="swipe-header__right">
+          <span className="swipe-header__counter">{total - remaining} / {total}</span>
+          {user && <AccountButton user={user} onSignOut={signOut} />}
+        </div>
       </header>
 
       <div className="swipe-progress">
