@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import SwipeCard from "@/components/SwipeCard";
 import { TravelCard } from "@/lib/data";
-import { saveResults, saveUserProfile } from "@/lib/store";
+import { saveResults } from "@/lib/store";
 import { UNSPLASH_QUERIES } from "@/lib/unsplashQueries";
 import { useAuth } from "@/lib/authContext";
 import { authedFetch } from "@/lib/authedFetch";
@@ -53,10 +53,23 @@ export default function SwipePage() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
   const [cards, setCards] = useState<TravelCard[]>([]);
+  const [tripId, setTripId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) router.replace("/auth");
   }, [user, authLoading, router]);
+
+  useEffect(() => {
+    if (!user) return;
+    authedFetch(`${process.env.NEXT_PUBLIC_API_URL}/trips`, { method: "POST" })
+      .then((res) => res.json())
+      .then((data) => {
+        setTripId(data.trip_id);
+        localStorage.setItem("current_trip_id", data.trip_id);
+      })
+      .catch((err) => console.error("Failed to create trip:", err));
+  }, [user]);
+
   const [loading, setLoading] = useState(true);
   const [liked, setLiked] = useState<TravelCard[]>([]);
   const [skipped, setSkipped] = useState<TravelCard[]>([]);
@@ -121,17 +134,17 @@ export default function SwipePage() {
       const top = cards[cards.length - 1];
       if (!top) return;
 
-      const scorePromise = authedFetch(`${process.env.NEXT_PUBLIC_API_URL}/score-image`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          image_url: top.imageUrl,
-          feedback: direction === "like" ? 1 : 0,
-        }),
-      })
-        .then((res) => res.json())
-        .then((data) => { if (data.user_profile) saveUserProfile(data.user_profile); })
-        .catch((err) => { console.error("Scoring API failed:", err); });
+      const scorePromise = tripId
+        ? authedFetch(`${process.env.NEXT_PUBLIC_API_URL}/score-image`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              image_url: top.imageUrl,
+              feedback: direction === "like" ? 1 : 0,
+              trip_id: tripId,
+            }),
+          }).catch((err) => { console.error("Scoring API failed:", err); })
+        : Promise.resolve();
 
       setExiting({ id: top.id, dir: direction });
 
@@ -160,7 +173,7 @@ export default function SwipePage() {
         }
       }, 350);
     },
-    [cards, liked, skipped, router]
+    [cards, liked, skipped, router, tripId]
   );
   if (loading) {
     return (
