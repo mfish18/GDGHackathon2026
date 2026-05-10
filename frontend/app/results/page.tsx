@@ -171,17 +171,24 @@ export default function ResultsPage() {
 
       {/* CTA */}
       <section className="results-section--cta">
-        <Animate i={13}><p className="cta-note">Results are saved to this session only.</p></Animate>
         <Animate i={14}>
           <button
             className="btn-retake"
+            onClick={() => router.push("/")}
+          >
+            Back to trips
+          </button>
+        </Animate>
+        <Animate i={15}>
+          <button
+            className="btn-new-trip"
             onClick={() => {
               clearResults();
               clearTravelProfile();
-              router.push("/");
+              router.push("/swipe");
             }}
           >
-            Retake the scan
+            New trip
           </button>
         </Animate>
       </section>

@@ -1,16 +1,43 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { User } from "firebase/auth";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import SwipeCard from "@/components/SwipeCard";
-import { TravelCard } from "@/lib/data";
-import { saveResults, saveUserProfile } from "@/lib/store";
-import { UNSPLASH_QUERIES } from "@/lib/unsplashQueries";
 import { useAuth } from "@/lib/authContext";
-import { authedFetch } from "@/lib/authedFetch";
+import type { Trip } from "@/lib/store";
 
+// Mock data — replace with Firestore fetch when backend is ready
+const MOCK_TRIPS: Trip[] = [
+  {
+    id: "trip-1",
+    name: "Summer 2025",
+    user_score: { energy: 40, nature: 60, nightlife: -20, luxury: 30, social_density: 10 },
+    title: "The Wandering Aesthete",
+    lifestyle_caption: "You seek beauty in slow mornings and spontaneous detours through cobblestone streets.",
+    trip1: "Lisbon",
+    trip1reason: "The melancholy charm of fado and sun-soaked tiles speaks to your soul.",
+    trip2: "Kyoto",
+    trip2reason: "Ancient temples and seasonal rituals match your contemplative pace.",
+    trip3: "Porto",
+    trip3reason: "Riverside wine culture and golden hour architecture are made for you.",
+    createdAt: "2025-06-15T10:00:00Z",
+  },
+  {
+    id: "trip-2",
+    name: "Spring Break",
+    user_score: { energy: 80, nature: -30, nightlife: 90, luxury: 50, social_density: 70 },
+    title: "The Urban Pulse",
+    lifestyle_caption: "You thrive in the electric hum of cities that never sleep.",
+    trip1: "Tokyo",
+    trip1reason: "Neon-lit streets and 24/7 energy match your relentless curiosity.",
+    trip2: "New York",
+    trip2reason: "The city's density and diversity fuels your need for constant stimulation.",
+    trip3: "Seoul",
+    trip3reason: "K-culture, street food, and rooftop bars align with your social instincts.",
+    createdAt: "2025-03-20T08:00:00Z",
+  },
+];
 
 function AccountButton({ user, onSignOut }: { user: User; onSignOut: () => Promise<void> }) {
   const [open, setOpen] = useState(false);
@@ -49,211 +76,120 @@ function AccountButton({ user, onSignOut }: { user: User; onSignOut: () => Promi
   );
 }
 
-export default function Home() {
+function TripCard({ trip, onClick, index }: { trip: Trip; onClick: () => void; index: number }) {
+  const date = new Date(trip.createdAt).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+
+  return (
+    <motion.div
+      className="trip-card"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.08, duration: 0.5, ease: "easeOut" }}
+      onClick={onClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === "Enter" && onClick()}
+    >
+      <div className="trip-card__header">
+        <div>
+          <p className="trip-card__name">{trip.name}</p>
+          <p className="trip-card__date">{date}</p>
+        </div>
+        <svg className="trip-card__arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M5 12h14M12 5l7 7-7 7" />
+        </svg>
+      </div>
+
+      <p className="trip-card__title">{trip.title}</p>
+      <p className="trip-card__caption">{trip.lifestyle_caption}</p>
+
+      <div className="trip-card__destinations">
+        {[trip.trip1, trip.trip2, trip.trip3].map((dest) => (
+          <span key={dest} className="trip-card__dest-chip">{dest}</span>
+        ))}
+      </div>
+    </motion.div>
+  );
+}
+
+function NewTripCard({ onClick, index }: { onClick: () => void; index: number }) {
+  return (
+    <motion.button
+      className="trip-card--new"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.08, duration: 0.5, ease: "easeOut" }}
+      onClick={onClick}
+    >
+      <div className="trip-card--new__icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+      </div>
+      <p className="trip-card--new__label">New Trip</p>
+      <p className="trip-card--new__hint">Start a new visual preference scan</p>
+    </motion.button>
+  );
+}
+
+export default function DashboardPage() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
-  const [cards, setCards] = useState<TravelCard[]>([]);
-
-  useEffect(() => { user?.getIdToken().then(t => console.log("TOKEN:", t)); }, [user]);
+  const [trips] = useState<Trip[]>(MOCK_TRIPS);
 
   useEffect(() => {
     if (!authLoading && !user) router.replace("/auth");
   }, [user, authLoading, router]);
-  const [loading, setLoading] = useState(true);
-  const [liked, setLiked] = useState<TravelCard[]>([]);
-  const [skipped, setSkipped] = useState<TravelCard[]>([]);
-  const [exiting, setExiting] = useState<{ id: string; dir: "like" | "skip" } | null>(null);
 
-  const CACHE_KEY = "unsplash_cards_cache";
+  if (authLoading || !user) return null;
 
-  const total = UNSPLASH_QUERIES.length;
-  const remaining = cards.length;
-
-  const progress =
-    total > 0 ? ((total - remaining) / total) * 100 : 0;
-
-  useEffect(() => {
-    const loadCards = async () => {
-      try {
-        const cached = localStorage.getItem(CACHE_KEY);
-
-        if (cached) {
-          setCards(JSON.parse(cached));
-          setLoading(false);
-          return;
-        }
-        const results = await Promise.all(
-          UNSPLASH_QUERIES.map(async (query: string, idx: number) => {
-            const res = await fetch(
-              `https://api.unsplash.com/photos/random?query=${encodeURIComponent(
-                query
-              )}&client_id=${process.env.NEXT_PUBLIC_UNSPLASH_KEY}`
-            );
-
-            const data = await res.json();
-
-            return {
-              id: data.id ?? `${query}-${idx}`,
-              label: query,
-              location: data.user?.location || "Unknown",
-              imageUrl: data.urls.regular,
-            };
-          })
-        );
-
-        const shuffled = results.sort(() => Math.random() - 0.5);
-
-        setCards(shuffled);
-        localStorage.setItem(CACHE_KEY, JSON.stringify(shuffled));
-      } catch (err) {
-        console.error("Failed loading cards:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadCards();
-  }, []);
-
-  const handleSwipe = useCallback(
-    async (direction: "like" | "skip") => {
-      const top = cards[cards.length - 1];
-      if (!top) return;
-
-      authedFetch("http://localhost:8000/score-image", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          image_url: top.imageUrl,
-          feedback: direction === "like" ? 1 : 0,
-        }),
-      })
-        .then((res) => res.json())
-        .then((data) => { if (data.user_profile) saveUserProfile(data.user_profile); })
-        .catch((err) => { console.error("Scoring API failed:", err); });
-
-      setExiting({ id: top.id, dir: direction });
-
-      setTimeout(() => {
-        const next = cards.slice(0, -1);
-
-        if (direction === "like") {
-          setLiked((prev) => [...prev, top]);
-        } else {
-          setSkipped((prev) => [...prev, top]);
-        }
-
-        setCards(next);
-        setExiting(null);
-
-        if (next.length === 0) {
-          const newLiked =
-            direction === "like" ? [...liked, top] : liked;
-
-          const newSkipped =
-            direction === "skip" ? [...skipped, top] : skipped;
-
-          saveResults(newLiked, newSkipped);
-          router.push("/loading");
-        }
-      }, 350);
-    },
-    [cards, liked, skipped, router]
-  );
-  if (loading) {
-    return (
-      <main className="swipe-page">
-        <div className="swipe-stack__empty">
-          <p className="font-mono text-muted">Generating your travel DNA...</p>
-        </div>
-      </main>
-    );
-  }
   return (
-    <main className="swipe-page">
-      <header className="swipe-header">
+    <main className="dashboard-page">
+      <header className="dashboard-header">
         <div>
-          <h1 className="swipe-header__title">Travel DNA</h1>
-          <p className="swipe-header__subtitle">Visual preference scan</p>
+          <h1 className="dashboard-header__title">Travel DNA</h1>
+          <p className="dashboard-header__subtitle">
+            {user.displayName ? `Welcome back, ${user.displayName.split(" ")[0]}` : "Your trips"}
+          </p>
         </div>
-        <div className="swipe-header__right">
-          <span className="swipe-header__counter">{total - remaining} / {total}</span>
-          {user && <AccountButton user={user} onSignOut={signOut} />}
-        </div>
+        <AccountButton user={user} onSignOut={signOut} />
       </header>
 
-      <div className="swipe-progress">
-        <div className="swipe-progress__track">
-          <motion.div
-            className="swipe-progress__fill"
-            animate={{ width: `${progress}%` }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
+      <div className="dashboard-content">
+        {trips.length > 0 && (
+          <p className="dashboard-section-label">Past trips</p>
+        )}
+
+        {trips.length === 0 && (
+          <motion.p
+            className="dashboard-empty"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            No trips yet. Start your first scan below.
+          </motion.p>
+        )}
+
+        <div className="dashboard-trips">
+          {trips.map((trip, i) => (
+            <TripCard
+              key={trip.id}
+              trip={trip}
+              index={i}
+              onClick={() => router.push(`/results?tripId=${trip.id}`)}
+            />
+          ))}
+
+          <NewTripCard
+            index={trips.length}
+            onClick={() => router.push("/swipe")}
           />
         </div>
-      </div>
-
-      <div className="swipe-arena">
-        <div className="swipe-stack">
-          <AnimatePresence>
-            {cards.map((card, i) => {
-              const isTop = i === cards.length - 1;
-              const isExiting = exiting?.id === card.id;
-
-              return (
-                <motion.div
-                  key={card.id}
-                  className="absolute inset-0"
-                  initial={false}
-                  animate={
-                    isExiting
-                      ? {
-                        x: exiting.dir === "like" ? 400 : -400,
-                        rotate: exiting.dir === "like" ? 20 : -20,
-                        opacity: 0,
-                      }
-                      : {}
-                  }
-                  transition={{ duration: 0.35, ease: "easeIn" }}
-                  style={{ zIndex: i }}
-                >
-                  <SwipeCard card={card} isTop={isTop && !isExiting} onSwipe={handleSwipe} />
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
-
-          {cards.length === 0 && (
-            <div className="swipe-stack__empty">
-              <p className="font-mono text-muted">Processing...</p>
-            </div>
-          )}
-        </div>
-
-        <p className="swipe-hint">Swipe right to keep, left to pass</p>
-      </div>
-
-      <div className="swipe-actions">
-        <button
-          className="btn-skip"
-          onClick={() => handleSwipe("skip")}
-          disabled={cards.length === 0}
-          aria-label="Skip"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
-
-        <button
-          className="btn-like"
-          onClick={() => handleSwipe("like")}
-          disabled={cards.length === 0}
-          aria-label="Like"
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-        </button>
       </div>
     </main>
   );

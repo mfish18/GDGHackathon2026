@@ -26,7 +26,7 @@ export default function LoadingPage() {
 
     const start = Date.now();
 
-    const fetchProfile = authedFetch("http://localhost:8000/travel-profile")
+    const fetchProfile = authedFetch(`${process.env.NEXT_PUBLIC_API_URL}/travel-profile`)
       .then((res) => res.json())
       .then((res) => {
         const data = res.data ?? res;
@@ -92,12 +92,11 @@ export default function LoadingPage() {
           ))}
         </div>
 
-        <div className="loading-bar">
+        <div className="loading-spinner">
           <motion.div
-            className="loading-bar__fill"
-            initial={{ width: "0%" }}
-            animate={{ width: "100%" }}
-            transition={{ duration: 3.2, ease: "easeInOut" }}
+            className="loading-spinner__ring"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1.1, repeat: Infinity, ease: "linear" }}
           />
         </div>
       </motion.div>
