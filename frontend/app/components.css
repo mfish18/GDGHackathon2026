@@ -35,6 +35,47 @@
   @apply font-mono text-xs text-muted;
 }
 
+.swipe-header__right {
+  @apply flex items-center gap-3;
+}
+
+/* ============================================================
+   ACCOUNT BUTTON + DROPDOWN
+   ============================================================ */
+
+.account-wrap {
+  @apply relative;
+}
+
+.account-btn {
+  @apply w-9 h-9 rounded-full bg-accent/80 flex items-center justify-center
+         font-mono text-sm font-bold text-paper
+         hover:bg-accent transition-all duration-200;
+}
+
+.account-dropdown {
+  @apply absolute right-0 top-11 w-56 bg-[#111118] border border-white/15
+         rounded-2xl p-4 shadow-2xl z-50 flex flex-col gap-2;
+}
+
+.account-dropdown__name {
+  @apply font-display text-sm font-bold text-paper truncate;
+}
+
+.account-dropdown__email {
+  @apply font-mono text-xs text-muted truncate;
+}
+
+.account-dropdown__divider {
+  @apply border-white/10 my-1;
+}
+
+.account-dropdown__logout {
+  @apply w-full font-mono text-xs uppercase tracking-widest text-rose-400
+         border border-rose-400/30 rounded-lg py-2
+         hover:bg-rose-400/10 transition-all duration-200;
+}
+
 .swipe-progress {
   @apply px-6 mb-4 shrink-0;
 }
@@ -74,7 +115,7 @@
 }
 
 .btn-like {
-  @apply w-20 h-20 rounded-full bg-accent flex items-center justify-center text-white
+  @apply w-16 h-16 rounded-full bg-accent flex items-center justify-center text-white
          hover:bg-accent-hover transition-all duration-200 shadow-lg
          disabled:opacity-20 disabled:cursor-not-allowed;
 }
@@ -171,6 +212,23 @@
 /* ============================================================
    RESULTS SCREEN
    ============================================================ */
+
+.results-header {
+  @apply flex items-center justify-between px-6 pt-8 pb-4 border-b border-white/10;
+}
+
+.results-header__title {
+  @apply font-display text-lg font-bold text-paper tracking-tight;
+}
+
+.results-header__user {
+  @apply font-mono text-xs text-muted mt-0.5;
+}
+
+.results-header__signout {
+  @apply font-mono text-xs text-paper/40 border border-white/20 rounded-full px-4 py-1.5
+         hover:border-rose-400/60 hover:text-rose-400 transition-all duration-200;
+}
 
 .results-section {
   @apply px-6 py-10 border-b border-white/10;
@@ -343,4 +401,115 @@
 
 .cta-note {
   @apply text-muted text-sm mb-6;
+}
+
+
+/* ============================================================
+   AUTH SCREEN
+   ============================================================ */
+
+.auth-card {
+  @apply w-full max-w-sm;
+}
+
+.auth-header {
+  @apply mb-8 text-center;
+}
+
+.auth-title {
+  @apply font-display text-4xl font-black text-paper tracking-tight;
+}
+
+.auth-subtitle {
+  @apply font-mono text-xs text-muted uppercase tracking-widest mt-2;
+}
+
+.auth-tabs {
+  @apply flex border border-white/10 rounded-xl p-1 mb-6 gap-1;
+}
+
+.auth-tab {
+  @apply flex-1 font-mono text-xs py-2 px-3 rounded-lg text-muted
+         uppercase tracking-widest transition-all duration-200
+         hover:text-paper;
+}
+
+.auth-tab--active {
+  @apply bg-white/10 text-paper;
+}
+
+.auth-form {
+  @apply flex flex-col gap-4;
+}
+
+.auth-field {
+  @apply flex flex-col gap-1.5;
+}
+
+.auth-label {
+  @apply font-mono text-xs text-muted uppercase tracking-widest;
+}
+
+.auth-input {
+  @apply w-full bg-white/[0.04] border border-white/10 rounded-xl
+         px-4 py-3 text-paper text-sm font-sans
+         placeholder:text-muted/50
+         focus:outline-none focus:border-accent/60 focus:bg-white/[0.07]
+         disabled:opacity-40 transition-all duration-200;
+}
+
+.auth-error {
+  @apply font-mono text-xs text-rose-400 bg-rose-400/10
+         border border-rose-400/20 rounded-lg px-3 py-2;
+}
+
+.auth-submit {
+  @apply mt-1 w-full bg-accent hover:bg-accent-hover text-paper font-mono
+         text-xs uppercase tracking-widest py-3.5 rounded-xl
+         transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed;
+}
+
+.auth-divider {
+  @apply flex items-center gap-3 my-5;
+}
+
+.auth-divider__line {
+  @apply flex-1 h-px bg-white/10;
+}
+
+.auth-divider__text {
+  @apply font-mono text-xs text-muted uppercase tracking-widest;
+}
+
+/* ============================================================
+   PASSWORD STRENGTH METER
+   ============================================================ */
+
+.pw-strength {
+  @apply flex items-center gap-2 mt-2;
+}
+
+.pw-strength__bars {
+  @apply flex gap-1 flex-1;
+}
+
+.pw-strength__bar {
+  @apply h-1 flex-1 rounded-full bg-white/10 transition-colors duration-300;
+}
+
+.pw-bar--weak   { @apply bg-rose-400; }
+.pw-bar--fair   { @apply bg-amber-400; }
+.pw-bar--good   { @apply bg-emerald-400; }
+.pw-bar--strong { @apply bg-emerald-300; }
+
+.pw-strength__label {
+  @apply font-mono text-xs w-12 text-right transition-colors duration-300;
+}
+
+.auth-google {
+  @apply w-full flex items-center justify-center gap-2.5
+         border border-white/10 rounded-xl py-3 px-4
+         font-mono text-xs text-paper/70 uppercase tracking-widest
+         hover:border-white/25 hover:text-paper hover:bg-white/[0.04]
+         transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed;
 }
